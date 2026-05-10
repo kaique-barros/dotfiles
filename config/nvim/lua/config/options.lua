@@ -1,8 +1,10 @@
 local set = vim.opt
 
 set.number = true
-set.tabstop = 4
-set.shiftwidth = 4
+set.tabstop = 2
+set.shiftwidth = 2
+set.softtabstop = 2
+set.expandtab = true
 set.foldmethod = "indent"
 set.foldlevel = 99
 

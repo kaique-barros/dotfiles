@@ -9,6 +9,7 @@ Slot {
   property real frameRadius: 100
   property real frameSize: 2
   property color frameColor: "black"
+  property real frameStrength: 0.3        // opacidade da sombra interna
   property color fillColor: "transparent"
   property real padding: 4
 
@@ -84,10 +85,28 @@ Slot {
     }
   }
 
+  Connections {
+    target: root.popup
+    ignoreUnknownSignals: true
+    function onHoveredChanged() {
+      if (root.trigger === "hover" && root.popup) {
+        if (root.popup.hovered) {
+          closeTimer.stop()
+        } else if (!mouseArea.containsMouse) {
+          closeTimer.restart()
+        }
+      }
+    }
+  }
+
   Timer {
     id: closeTimer
     interval: root.hoverCloseDelay
-    onTriggered: root.closePopup()
+    onTriggered: {
+      if (!mouseArea.containsMouse && (!root.popup || !root.popup.hovered)) {
+        root.closePopup()
+      }
+    }
   }
 
   // ---- visual ----
@@ -108,6 +127,7 @@ Slot {
       radius: root.effectiveRadius
       size: root.frameSize
       color: root.frameColor
+      strength: root.frameStrength
     }
 
     Item {

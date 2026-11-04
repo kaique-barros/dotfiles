@@ -1,4 +1,5 @@
 import QtQuick
+import Quickshell.Widgets
 
 Item {
   id: root
@@ -8,16 +9,23 @@ Item {
   required property string edge          // "left" | "right" | "top" | "bottom"
   required property color frameColor
 
+  // textura de chapisco (a mesma da moldura; vazio = sem textura)
+  property url splatterSource: ""
+  property real splatterOpacity: 0.35
+
   property real pos: 0                   // início ao longo da barra, em coords da janela (y se left/right, x se top/bottom)
   property int popupWidth: 300
   property int popupHeight: 180
   property bool open: false
   property int padding: 12
-  property int cornerRadius: canva.internalRadius          // cantos externos (convexos)
+  property int cornerRadius: bar.internalRadius          // cantos externos (convexos)
   property int filletRadius: bar.internalRadius   // junções (côncavas)
 
   property var peerStart: null           // popup vizinho ANTES deste na mesma barra
   property var peerEnd: null             // popup vizinho DEPOIS deste na mesma barra
+
+  property bool snapToStart: false
+  property bool snapToEnd: false
 
   property int offset: 0
   property int animationTime: 250
@@ -55,8 +63,8 @@ Item {
   readonly property real rawStart: Math.max(aMin, Math.min(aMax - span0, wantedStart))
 
   // sobra menos que r até uma barra: não cabe fillet, então cola
-  readonly property bool nearStart: rawStart - aMin < r
-  readonly property bool nearEnd: aMax - (rawStart + span0) < r
+  readonly property bool nearStart: snapToStart || (rawStart - aMin < r)
+  readonly property bool nearEnd: snapToEnd || (aMax - (rawStart + span0) < r)
   readonly property bool fill: nearStart && nearEnd
 
   readonly property real span: Math.round(fill ? aMax - aMin : span0)
@@ -155,13 +163,25 @@ Item {
   visible: shown
 
   // ---------- visual ----------
-  Rectangle {
+  ClippingRectangle {
     anchors.fill: parent
     color: root.frameColor
     topLeftRadius: root.radiusAt("tl")
     topRightRadius: root.radiusAt("tr")
     bottomLeftRadius: root.radiusAt("bl")
     bottomRightRadius: root.radiusAt("br")
+
+    Image {
+      visible: root.splatterSource.toString().length > 0
+      source: root.splatterSource
+      x: -root.x
+      y: -root.y
+      width: root.bar.width
+      height: root.bar.height
+      fillMode: Image.Tile
+      opacity: root.splatterOpacity
+      smooth: true
+    }
   }
 
   Fillet { visible: root.wallStartFillet > 0.5; color: root.frameColor; r: root.wallStartFillet

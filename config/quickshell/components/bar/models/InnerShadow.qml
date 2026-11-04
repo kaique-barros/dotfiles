@@ -3,8 +3,8 @@ import QtQuick.Effects
 
 Item {
   id: root
-  property real radius: 2
-  property real size: 1                // espessura da sombra
+  property real radius: 20
+  property real size: 10                // espessura da sombra
   property color color: "black"
   property real strength: 0.3
 

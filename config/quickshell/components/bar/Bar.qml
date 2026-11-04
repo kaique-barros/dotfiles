@@ -1,10 +1,13 @@
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Effects
 
 import "models"
+import "modules"
+import "dock"
 
 PanelWindow {
   id: canva
@@ -24,7 +27,20 @@ PanelWindow {
   property int leftSize: 60
   property int rightSize: 0
   property int internalRadius: 10
-  property int dockAnimationTime: 150
+
+  // ================= CONFIGURAÇÕES GLOBAIS UNIFICADAS =================
+  property int dockSize: 650
+  property int animationTime: 250
+  property int dockAnimationTime: animationTime
+  property color frameColor: "white"
+  property url splatterSource: "file://" + Quickshell.shellPath("assets/splatter.png")
+  property real splatterOpacity: 0.35
+
+  property color itemBackgroundColor: "gray"
+  property real itemBackgroundOpacity: 1
+  property color itemFillColor: Qt.rgba(itemBackgroundColor.r, itemBackgroundColor.g, itemBackgroundColor.b, itemBackgroundOpacity)
+  property real pillThickness: 40
+  // ====================================================================
 
   Item {
     id: globalShadowContainer
@@ -36,19 +52,21 @@ PanelWindow {
       anchors.fill: parent
       anchors.margins: 20
 
-      BarDrawer { id: barDrawer; canva: canva; animationTime: dockAnimationTime }
+      BarDrawer { id: barDrawer; canva: canva; animationTime: canva.animationTime }
 
       PopupModel {
-        id: popupB
+        id: dockPusher
         bar: canva
         edge: "left"
         // Mantém o popup aberto o tempo todo enquanto a dock estiver ativa
         open: barDrawer.dockActive
-        frameColor: barDrawer.frameColor
+        frameColor: canva.frameColor
         popupWidth: 30
         popupHeight: 90
-        offset: barDrawer.dockActive ? 650 : 0
-        animationTime: dockAnimationTime
+        offset: barDrawer.dockActive ? canva.dockSize : 0
+        animationTime: canva.animationTime
+        splatterSource: canva.splatterSource
+        splatterOpacity: canva.splatterOpacity
 
         Icon {
           id: popupIcon
@@ -70,26 +88,53 @@ PanelWindow {
       anchors.fill: shapeSource
       shadowEnabled: true
       shadowColor: 'black'
-      shadowBlur: 0.8
-      shadowHorizontalOffset: 4
+      shadowBlur: 0.3
+      shadowHorizontalOffset: 0
       shadowVerticalOffset: 0
     }
   }
 
+  // ================= CONTEÚDO DA DOCK =================
+  DockContent {
+    id: dockContent
+    canva: canva
+    barDrawer: barDrawer
+  }
+
+  // ================= VOLUME NO LADO DIREITO =================
+  RightVolumeBar {
+    id: rightVolumeBar
+    canva: canva
+    dockActive: barDrawer.dockActive
+  }
+
+  // Detector na borda direita para disparar o volume por aproximação
+  Item {
+    id: rightEdgeDetector
+    x: canva.width - 16
+    y: 0
+    width: 16
+    height: canva.height
+    z: 99
+
+    HoverHandler {
+      id: edgeHover
+      onHoveredChanged: rightVolumeBar.edgeHovered = edgeHover.hovered
+    }
+  }
+
   BarItemModel {
-    id: archItem
+    id: archIcon
     bar: canva
     edge: "left"
-    
-    // Muda a posição para o final quando a dock está ativa
     align: "center"
     pos: 10
     length: 200
     framed: false
-    popup: popupB
+    popup: dockPusher
     trigger: "hover"
-    offset: barDrawer.dockActive ? 650 : 0
-    animationTime: dockAnimationTime
+    offset: barDrawer.dockActive ? canva.dockSize : 0
+    animationTime: canva.animationTime
     
     onClicked: {
       barDrawer.dockActive = !barDrawer.dockActive
@@ -104,16 +149,20 @@ PanelWindow {
     }
   }
 
-  ClippingRectangle {
-    visible: false
-    color: 'red'
-    opacity: .2
-    topLeftRadius: internalRadius
-    bottomLeftRadius: internalRadius
-    x: canva.leftSize
-    y: canva.topSize
-    width: canva.width - canva.leftSize - canva.rightSize
-    height: canva.height - canva.topSize - canva.bottomSize
+  BarItemModel {
+    id: clock
+    bar: canva
+    edge: 'left'
+    align: 'end'
+  }
+
+  Workspaces {
+    bar: canva
+    edge: "left"
+    align: "start"
+    pos: 0
+    offset: barDrawer.dockActive ? canva.dockSize : 0     // acompanha a dock, como o archItem
+    animationTime: canva.animationTime
   }
 
   // Região clicável
@@ -131,7 +180,17 @@ PanelWindow {
 
     Region {
       intersection: Intersection.Combine
-      item: popupB
+      item: dockPusher
+    }
+
+    Region {
+      intersection: Intersection.Combine
+      item: rightEdgeDetector
+    }
+
+    Region {
+      intersection: Intersection.Combine
+      item: rightVolumeBar
     }
   }
 

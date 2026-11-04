@@ -16,11 +16,13 @@ Item {
     onFileChanged: dockActive = !dockActive
   }
 
-  property color frameColor: "white"
   required property var canva
+  property color frameColor: canva.frameColor
   property bool dockActive: false 
-  property int dockSize: dockActive ? 650 : 0
-  property int animationTime: 250
+  property int dockSize: dockActive ? canva.dockSize : 0
+  property int animationTime: canva.animationTime
+  property url splatterSource: canva.splatterSource
+  property real splatterOpacity: canva.splatterOpacity
 
   Behavior on dockSize {
     NumberAnimation {
@@ -42,6 +44,14 @@ Item {
   Rectangle {
     anchors.fill: parent
     color: barDrawer.frameColor
+  }
+
+  Image {
+    anchors.fill: parent
+    source: barDrawer.splatterSource
+    fillMode: Image.Tile
+    opacity: barDrawer.splatterOpacity
+    smooth: true
   }
 
   Item {

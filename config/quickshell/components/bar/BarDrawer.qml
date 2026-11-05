@@ -13,7 +13,10 @@ Item {
     id: dockStateFile
     path: "/tmp/quickshell_dock_active"
     watchChanges: true
-    onFileChanged: dockActive = !dockActive
+    onFileChanged:{
+      dockActive = !dockActive
+      console.log(safeZone.itemAt(3)) 
+    }
   }
 
   required property var canva

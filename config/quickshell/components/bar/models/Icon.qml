@@ -22,7 +22,6 @@ Item {
     smooth: true
     visible: false            // quem aparece é o MultiEffect
     layer.enabled: true       // necessário para o efeito usar o item
-    Component.onCompleted: console.log(Quickshell.shellPath("assets/arch-linux.svg"))
   }
 
   MultiEffect {

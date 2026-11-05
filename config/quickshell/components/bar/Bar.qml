@@ -11,8 +11,6 @@ import "dock"
 
 PanelWindow {
   id: canva
-  WlrLayershell.exclusionMode: ExclusionMode.Ignore
-
   anchors {
     top: true
     bottom: true
@@ -41,6 +39,8 @@ PanelWindow {
   property color itemFillColor: Qt.rgba(itemBackgroundColor.r, itemBackgroundColor.g, itemBackgroundColor.b, itemBackgroundOpacity)
   property real pillThickness: 40
   // ====================================================================
+  
+  WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
   Item {
     id: globalShadowContainer
@@ -58,7 +58,6 @@ PanelWindow {
         id: dockPusher
         bar: canva
         edge: "left"
-        // Mantém o popup aberto o tempo todo enquanto a dock estiver ativa
         open: barDrawer.dockActive
         frameColor: canva.frameColor
         popupWidth: 30
@@ -71,7 +70,6 @@ PanelWindow {
         Icon {
           id: popupIcon
           anchors.centerIn: parent
-          // Alterna dinamicamente a imagem com base no estado da dock
           source: "file://" + Quickshell.shellPath(
             barDrawer.dockActive 
               ? "assets/dock_arrow_close.svg" 
@@ -138,7 +136,6 @@ PanelWindow {
     
     onClicked: {
       barDrawer.dockActive = !barDrawer.dockActive
-      console.log("dockActive:", barDrawer.dockActive, "size:", barDrawer.dockSize)
     }
 
     Icon {
@@ -152,8 +149,24 @@ PanelWindow {
   BarItemModel {
     id: clock
     bar: canva
+    pos: 40
+    length: 200
     edge: 'left'
     align: 'end'
+    SystemClock {
+      id: sysClock
+      precision: SystemClock.Seconds
+    }
+    Column {
+      Text {
+        text: sysClock.hours
+        color: 'black'
+      }
+      Text {
+        text: sysClock.minutes
+        color: 'black'
+      }
+    }
   }
 
   Workspaces {
@@ -196,6 +209,7 @@ PanelWindow {
 
   // Espaço reservado para a barra
   Repeater {
+    id: safeZone
     model: [
       {edge: 'top', size: canva.topSize},
       {edge: 'bottom', size: canva.bottomSize},
@@ -214,6 +228,7 @@ PanelWindow {
       }
       mask: Region {}
       color: 'transparent'
+      exclusiveZone: size
       
       implicitWidth: (edge === 'left' || edge === 'right') ? size : 0 
       implicitHeight: (edge === 'top' || edge === 'bottom') ? size : 0

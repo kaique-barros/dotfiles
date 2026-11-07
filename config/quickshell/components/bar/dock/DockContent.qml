@@ -29,8 +29,21 @@ Item {
   GlobalShortcut { appid: "quickshell"; name: "dockNext"; description: "Próxima página da dock"; onPressed: root.nextPage() }
   GlobalShortcut { appid: "quickshell"; name: "dockPrev"; description: "Página anterior da dock"; onPressed: root.prevPage() }
 
-  // F e G só são capturados enquanto a dock está aberta
+  readonly property bool launcherActive: barDrawer.dockActive && pageView.currentPage === 1
+
+  // ao fechar a dock, ela volta para a primeira página
+  property bool resetPageOnClose: true
+  onVisibleChanged: {
+    if (!visible && resetPageOnClose) pageView.currentPage = 0
+    if (visible) console.log("DOCK pageView h:", pageView.height, "w:", pageView.width,
+                             "page2.y:", page2.y, "launcher h:", launcher.height,
+                             "currentPage:", pageView.currentPage)
+  }
+
+  property bool shortcutsBound: false
   function setShortcutsBound(on) {
+    if (on === shortcutsBound) return
+    shortcutsBound = on
     Quickshell.execDetached(["hyprctl", "--batch", on
       ? "keyword bind , F, global, quickshell:dockNext ; keyword bind , G, global, quickshell:dockPrev"
       : "keyword unbind , F ; keyword unbind , G"])
@@ -40,31 +53,58 @@ Item {
     target: root.barDrawer
     function onDockActiveChanged() { root.setShortcutsBound(root.barDrawer.dockActive) }
   }
-  Component.onDestruction: root.setShortcutsBound(false)
 
-  Behavior on x {
-    NumberAnimation {
-      duration: canva.animationTime
-      easing.type: barDrawer.dockActive ? Easing.OutCubic : Easing.InCubic
-    }
-  }
+  Component.onDestruction: root.setShortcutsBound(false)
 
   // ================= 1. RETÂNGULO SEPARADOR COM SOMBRA INTERNA =================
   // Retângulo com cantos arredondados e sombra interna separando o conteúdo da dock
   // sombra à direita, do topo ao fim da tela, desvanecendo para a esquerda
-  Rectangle {
+  Item {
     id: dockShadow
-    property real fadeWidth: 220      // até onde a sombra se espalha para a esquerda
-    property real strength: 0.22
-    anchors.top: parent.top
-    anchors.bottom: parent.bottom
-    anchors.right: parent.right
-    width: fadeWidth
-    gradient: Gradient {
-      orientation: Gradient.Horizontal
-      GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0) }
-      GradientStop { position: 0.7; color: Qt.rgba(0, 0, 0, dockShadow.strength * 0.2) }
-      GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, dockShadow.strength) }
+    anchors.fill: parent
+
+    property real size: 6                                    // mesma ordem de grandeza da sombra da borda
+    property real strength: 0.3
+    property real reach: canva.dockSize - 6
+
+    Item {
+      anchors.fill: parent
+      layer.enabled: true
+      layer.effect: MultiEffect {
+        maskEnabled: true
+        maskSource: dockShadowMask
+      }
+
+      InnerShadow {
+        anchors.fill: parent
+        radius: canva.internalRadius                         // o mesmo raio da borda
+        size: dockShadow.size
+        strength: dockShadow.strength
+        color: "black"
+      }
+    }
+
+    // máscara: só a faixa da direita aparece, e some para a esquerda (mesmo tamanho do item mascarado)
+    Item {
+      id: dockShadowMask
+      anchors.fill: parent
+      layer.enabled: true
+      visible: false
+
+      Rectangle {
+        anchors.right: parent.right
+        width: dockShadow.reach
+        height: parent.height
+        gradient: Gradient {
+          orientation: Gradient.Horizontal
+          GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.00) }
+          GradientStop { position: 0.2; color: Qt.rgba(1, 1, 1, 0.10) }
+          GradientStop { position: 0.4; color: Qt.rgba(1, 1, 1, 0.35) }
+          GradientStop { position: 0.6; color: Qt.rgba(1, 1, 1, 0.65) }
+          GradientStop { position: 0.8; color: Qt.rgba(1, 1, 1, 0.90) }
+          GradientStop { position: 1.0; color: Qt.rgba(1, 1, 1, 1.00) }
+        }
+      }
     }
   }
 
@@ -127,6 +167,7 @@ Item {
 
         Behavior on y {
           NumberAnimation {
+            id: slide
             duration: 320
             easing.type: Easing.OutCubic
           }
@@ -139,6 +180,8 @@ Item {
           y: 0
           width: pageView.width
           height: pageView.height
+          clip: true
+          visible: pageView.currentPage === 0 || slide.running
 
           // Seção de Controle de Volume por App no canto superior direito
           AppVolumeSection {
@@ -165,6 +208,8 @@ Item {
           y: pageView.height
           width: pageView.width
           height: pageView.height
+          clip: true
+          visible: pageView.currentPage === 0 || slide.running
 
           Column {
             anchors.left: parent.left
@@ -172,22 +217,12 @@ Item {
             anchors.topMargin: 14
             spacing: 2
           }
-
-          Rectangle {
-            anchors.centerIn: parent
-            width: parent.width - 40
-            height: 120
-            radius: 12
-            color: "#f8f9fc"
-            border.color: "#eaecf0"
-            border.width: 1
-
-            Text {
-              anchors.centerIn: parent
-              text: "Conteúdo da Página 2"
-              font.pixelSize: 11
-              color: "#98a2b3"
-            }
+          AppLauncher {
+            id: launcher
+            anchors.fill: parent
+            active: root.launcherActive
+            onLaunched: if (launcher.closeOnLaunch) root.barDrawer.dockActive = false
+            onCloseRequested: root.barDrawer.dockActive = false
           }
         }
 
@@ -198,6 +233,8 @@ Item {
           y: pageView.height * 2
           width: pageView.width
           height: pageView.height
+          clip: true
+          visible: pageView.currentPage === 0 || slide.running
 
           Column {
             anchors.left: parent.left

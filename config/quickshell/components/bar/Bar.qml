@@ -41,6 +41,7 @@ PanelWindow {
   // ====================================================================
   
   WlrLayershell.exclusionMode: ExclusionMode.Ignore
+  WlrLayershell.keyboardFocus: dockContent.launcherActive ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.Noe
 
   Item {
     id: globalShadowContainer

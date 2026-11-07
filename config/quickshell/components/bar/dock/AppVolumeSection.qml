@@ -1,359 +1,347 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Widgets
-import Quickshell.Services.Pipewire
 
-import "../models"
-
+// Launcher em grade com páginas.
+// Seleção: h j k l + Enter, ou combinações de letras na caixinha embaixo de cada ícone.
 Item {
   id: root
 
-  // Largura compacta no canto superior direito
-  width: 290
+  // ================= CONFIGURAÇÕES =================
+  property bool active: false              // ligado pela dock quando esta página está visível
+  property bool closeOnLaunch: true        // fecha a dock depois de lançar
 
-  // Constantes de paginação
-  readonly property int itemsPerPage: 3
-  property int currentPage: 0
+  // "all"  = todos os apps (como o rofi)
+  // "user" = só ~/.local/share/applications
+  property string source: "all"
 
-  readonly property var streamNodes: {
-    if (!Pipewire.ready || !Pipewire.nodes) return []
+  // grade
+  property int columns: 4
+  property int rows: 5
+  property real iconSize: 56               // tamanho igual para todos os ícones
+
+  // margens da área onde a grade fica centralizada (individuais)
+  property real marginTop: 60
+  property real marginBottom: 60
+  property real marginLeft: 20
+  property real marginRight: 20
+
+  // células
+  property real cellPadding: 12            // folga em volta do ícone (a seleção usa isso)
+  property real spacingX: 12
+  property real spacingY: 12
+
+  // caixinha de atalho
+  property real hintHeight: 18
+  property real hintSpacing: 6
+  property var hintKeys: ["q", "w", "e", "r", "t", "a", "s", "d", "z", "x", "c", "v"]
+
+  // cores
+  property color selectedColor: "#e8ebf0"
+  property color hintColor: "#1e1e2e"
+  property color hintTextColor: "white"
+  property color textColor: "#344054"
+  // =================================================
+
+  signal launched()
+  signal closeRequested()
+
+  property int selected: 0                 // índice dentro da página atual
+  property int page: 0
+  property var typed: []                   // letras já digitadas no modo de atalho
+  property var fileIds: []                 // ids dos .desktop da pasta do usuário (source "user")
+
+  readonly property int perPage: columns * rows
+  readonly property var alphabet: hintKeys.filter((k, i, a) => a.indexOf(k) === i)
+
+  readonly property var apps: {
     const list = []
-    const vals = Pipewire.nodes.values
-    for (let i = 0; i < vals.length; i++) {
-      const n = vals[i]
-      if (n && n.isStream && n.audio) {
-        list.push(n)
+    if (source === "user") {
+      for (let i = 0; i < fileIds.length; i++) {
+        const e = DesktopEntries.byId(fileIds[i])
+        if (e && !e.noDisplay) list.push(e)
+      }
+    } else {
+      const all = DesktopEntries.applications.values
+      for (let i = 0; i < all.length; i++) {
+        if (!all[i].noDisplay) list.push(all[i])
       }
     }
+    list.sort((a, b) => (a.name || "").toLowerCase().localeCompare((b.name || "").toLowerCase()))
     return list
   }
 
-  PwObjectTracker {
-    objects: root.streamNodes
+  readonly property int pageCount: Math.max(1, Math.ceil(apps.length / perPage))
+  onPageCountChanged: if (page >= pageCount) page = pageCount - 1
+
+  readonly property var pageApps: apps.slice(page * perPage, (page + 1) * perPage)
+  readonly property var codes: makeCodes(alphabet, pageApps.length)
+
+  // ---------- códigos de atalho ----------
+  function binom(n, k) {
+    let r = 1
+    for (let i = 1; i <= k; i++) r = r * (n - k + i) / i
+    return Math.round(r)
   }
 
-  readonly property int totalStreams: root.streamNodes.length
-  readonly property int totalPages: Math.max(1, Math.ceil(totalStreams / itemsPerPage))
-
-  // Garante que currentPage seja sempre válida
-  onTotalPagesChanged: {
-    if (currentPage >= totalPages) currentPage = Math.max(0, totalPages - 1)
-  }
-
-  // Itens da página atual (fatiados de 3 em 3)
-  readonly property var currentStreams: {
-    const start = currentPage * itemsPerPage
-    return streamNodes.slice(start, start + itemsPerPage)
-  }
-
-  // Altura dinâmica conforme o número de mídias ativas na página (limitado a 3)
-  // Cabeçalho: ~34px + cada stream: ~50px + paginação se > 3: ~26px
-  readonly property int currentStreamCount: Math.min(itemsPerPage, totalStreams)
-  implicitHeight: totalStreams === 0 
-    ? 85 
-    : (40 + currentStreamCount * 52 + (totalPages > 1 ? 30 : 12))
-
-  height: implicitHeight
-  Behavior on height {
-    NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-  }
-
-  function resolveAppIcon(node) {
-    if (!node || !node.properties) return ""
-    const p = node.properties
-    const candidates = [
-      p["application.icon-name"],
-      p["application.icon_name"],
-      p["application.name"],
-      p["node.name"]
-    ]
-    for (let i = 0; i < candidates.length; i++) {
-      const c = candidates[i]
-      if (c && typeof c === "string" && c.trim() !== "") {
-        const path = Quickshell.iconPath(c.trim().toLowerCase())
-        if (path && path.toString() !== "") return path
+  // todos os códigos têm o mesmo tamanho L: o menor L em que as combinações cobrem os apps
+  function makeCodes(alpha, count) {
+    const n = alpha.length
+    if (count <= 0 || n === 0) return []
+    let L = 1
+    while (binom(n, L) < count && L < n) L++
+    const out = []
+    const idx = []
+    function rec(start, depth) {
+      if (depth === L) { out.push(idx.map(i => alpha[i])); return }
+      for (let i = start; i < n; i++) {
+        idx.push(i)
+        rec(i + 1, depth + 1)
+        idx.pop()
+        if (out.length >= count) return
       }
     }
-    return ""
+    rec(0, 0)
+    return out.slice(0, count)
   }
 
-  // ================= CONTAINER "AFUNDADO" =================
-  // Fundo com cantos arredondados
-  Rectangle {
-    id: sunkenBg
-    anchors.fill: parent
-    radius: 14
-    color: "#e8ebf0"
-    border.color: "#d9dce2"
-    border.width: 1
+  function matches(code) {
+    return typed.every(t => code.indexOf(t) >= 0)
   }
 
-  // Sombra interna dando o efeito de profundidade / recesso
-  InnerShadow {
-    anchors.fill: parent
-    radius: 14
-    size: 6
-    strength: 0.28
-    color: "black"
+  // ---------- ações ----------
+  function iconFor(e) {
+    if (!e || !e.icon) return ""
+    if (e.icon.startsWith("/")) return "file://" + e.icon
+    const p = Quickshell.iconPath(e.icon, true)
+    return p ? p : ""
   }
 
-  // ================= CONTEÚDO DA SEÇÃO =================
-  Column {
-    anchors.fill: parent
-    anchors.margins: 10
-    spacing: 6
+  function move(dc, dr) {
+    const n = pageApps.length
+    if (n === 0) return
+    const col = selected % columns
+    const row = Math.floor(selected / columns)
 
-    // Cabeçalho compacto com título e controle de paginação (se > 3 mídias)
-    RowLayout {
-      width: parent.width
-
-      Text {
-        text: "Mídias Ativas"
-        font.pixelSize: 11
-        font.bold: true
-        color: "#4c4f69"
-      }
-
-      Item { Layout.fillWidth: true }
-
-      // Controles de paginação se houver mais de 3 mídias
-      Row {
-        spacing: 4
-        visible: root.totalPages > 1
-
-        // Botão Página Anterior
-        Rectangle {
-          width: 18
-          height: 18
-          radius: 4
-          color: root.currentPage > 0 ? "#d0d5dd" : "#e0e3ea"
-          opacity: root.currentPage > 0 ? 1.0 : 0.4
-
-          Text {
-            anchors.centerIn: parent
-            text: "‹"
-            font.pixelSize: 12
-            font.bold: true
-            color: "#344054"
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            enabled: root.currentPage > 0
-            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: root.currentPage = Math.max(0, root.currentPage - 1)
-          }
-        }
-
-        // Indicador numérico (ex: 1/2)
-        Text {
-          anchors.verticalCenter: parent.verticalCenter
-          text: (root.currentPage + 1) + "/" + root.totalPages
-          font.pixelSize: 10
-          font.bold: true
-          color: "#667085"
-        }
-
-        // Botão Próxima Página
-        Rectangle {
-          width: 18
-          height: 18
-          radius: 4
-          color: root.currentPage < root.totalPages - 1 ? "#d0d5dd" : "#e0e3ea"
-          opacity: root.currentPage < root.totalPages - 1 ? 1.0 : 0.4
-
-          Text {
-            anchors.centerIn: parent
-            text: "›"
-            font.pixelSize: 12
-            font.bold: true
-            color: "#344054"
-          }
-
-          MouseArea {
-            anchors.fill: parent
-            enabled: root.currentPage < root.totalPages - 1
-            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-            onClicked: root.currentPage = Math.min(root.totalPages - 1, root.currentPage + 1)
-          }
-        }
-      }
+    if (dc !== 0) {
+      const nc = col + dc
+      if (nc < 0 || nc >= columns) return
+      const ni = row * columns + nc
+      if (ni < n) selected = ni
+      return
     }
 
-    // Estado vazio se nenhuma mídia estiver tocando
+    const nr = row + dr
+    if (nr < 0) {                                   // topo: página anterior
+      if (page > 0) { page--; selected = (rows - 1) * columns + col }
+      return
+    }
+    if (nr >= rows) {                               // fim: próxima página
+      if (page < pageCount - 1) { page++; selected = Math.min(col, pageApps.length - 1) }
+      return
+    }
+    const ni = nr * columns + col
+    if (ni < n) selected = ni
+  }
+
+  function launch(i) {
+    if (i < 0 || i >= pageApps.length) return
+    typed = []
+    pageApps[i].execute()
+    launched()
+  }
+
+  function typeLetter(ch) {
+    const next = typed.concat([ch])
+    let found = -1
+    let count = 0
+    for (let i = 0; i < codes.length; i++) {
+      if (next.every(t => codes[i].indexOf(t) >= 0)) {
+        count++
+        if (codes[i].length === next.length) found = i      // não sobrou letra: é esse
+      }
+    }
+    if (count === 0) return                                  // nenhum app tem essa letra: ignora
+    typed = next
+    if (found >= 0) launch(found)
+  }
+
+  function handleKey(event) {
+    if (!active) return
+    if (event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier)) return
+
+    const k = event.key
+    if (k === Qt.Key_Return || k === Qt.Key_Enter) {
+      if (!event.isAutoRepeat) launch(selected)
+    } else if (k === Qt.Key_Escape) {
+      if (typed.length > 0) typed = []
+      else closeRequested()
+    } else if (k === Qt.Key_Backspace) {
+      typed = typed.slice(0, -1)
+    } else {
+      const ch = (event.text || "").toLowerCase()
+      if (ch === "h") move(-1, 0)
+      else if (ch === "l") move(1, 0)
+      else if (ch === "j") move(0, 1)
+      else if (ch === "k") move(0, -1)
+      else if (!event.isAutoRepeat && alphabet.indexOf(ch) >= 0) typeLetter(ch)
+      else return
+    }
+    event.accepted = true
+  }
+
+  onActiveChanged: {
+    if (active) {
+      selected = 0
+      page = 0
+      typed = []
+      lister.running = true                // relê a pasta (pega atalhos novos)
+      keys.forceActiveFocus()
+    }
+  }
+
+  // lista os arquivos .desktop da pasta do usuário (usado só com source "user")
+  Process {
+    id: lister
+    command: ["sh", "-c", "ls -1 \"$HOME/.local/share/applications\" 2>/dev/null"]
+    running: true
+    stdout: StdioCollector {
+      onStreamFinished: {
+        root.fileIds = text.split("\n")
+          .filter(f => f.endsWith(".desktop"))
+          .map(f => f.slice(0, -8))
+      }
+    }
+  }
+
+  Item {
+    id: keys
+    focus: true
+    Keys.onPressed: (event) => root.handleKey(event)
+  }
+
+  // ---------- visual ----------
+  Item {
+    id: gridBox
+    anchors.fill: parent
+    anchors.topMargin: root.marginTop
+    anchors.bottomMargin: root.marginBottom
+    anchors.leftMargin: root.marginLeft
+    anchors.rightMargin: root.marginRight
+
+    readonly property real cellW: root.iconSize + 2 * root.cellPadding
+    readonly property real cellH: root.iconSize + root.hintSpacing + root.hintHeight + 2 * root.cellPadding
+
     Item {
-      width: parent.width
-      height: 38
-      visible: root.totalStreams === 0
-
-      Text {
-        anchors.centerIn: parent
-        text: "Nenhuma mídia reproduzindo"
-        font.pixelSize: 10
-        font.italic: true
-        color: "#98a2b3"
-      }
-    }
-
-    // Lista de mídias (máximo de 3 por página)
-    Column {
-      width: parent.width
-      spacing: 6
-      visible: root.totalStreams > 0
+      id: grid
+      anchors.centerIn: parent
+      width: root.columns * gridBox.cellW + (root.columns - 1) * root.spacingX
+      height: root.rows * gridBox.cellH + (root.rows - 1) * root.spacingY
 
       Repeater {
-        model: root.currentStreams
+        model: root.pageApps
 
-        delegate: Rectangle {
-          id: appItem
+        delegate: Item {
+          id: cell
           required property var modelData
+          required property int index
 
-          width: parent.width
-          height: 46
-          radius: 8
-          color: "#ffffff"
-          border.color: "#e2e5ec"
-          border.width: 1
+          readonly property var code: root.codes[index] || []
+          readonly property bool hintShown: root.matches(code)
+          readonly property var remaining: code.filter(c => root.typed.indexOf(c) < 0)
 
-          readonly property var nodeAudio: modelData ? modelData.audio : null
-          readonly property real appVol: nodeAudio ? nodeAudio.volume : 0
-          readonly property bool appMuted: nodeAudio ? nodeAudio.muted : false
-          readonly property string appName: {
-            if (!modelData || !modelData.properties) return modelData ? modelData.name : ""
-            return modelData.properties["application.name"] ||
-                   modelData.properties["media.name"] ||
-                   modelData.name
-          }
-          readonly property url appIconUrl: root.resolveAppIcon(modelData)
+          x: (index % root.columns) * (gridBox.cellW + root.spacingX)
+          y: Math.floor(index / root.columns) * (gridBox.cellH + root.spacingY)
+          width: gridBox.cellW
+          height: gridBox.cellH
 
-          RowLayout {
+          Rectangle {
             anchors.fill: parent
-            anchors.margins: 6
-            spacing: 8
+            radius: 12
+            color: root.selectedColor
+            visible: cell.index === root.selected
+          }
 
-            // Ícone do App / Botão de Mute
-            Rectangle {
-              Layout.preferredWidth: 28
-              Layout.preferredHeight: 28
-              radius: 6
-              color: appItem.appMuted ? "#fee4e2" : "#f2f4f7"
+          Column {
+            anchors.centerIn: parent
+            spacing: root.hintSpacing
+
+            // ícone (ou a inicial do app, se o ícone não for encontrado)
+            Item {
+              width: root.iconSize
+              height: root.iconSize
+              anchors.horizontalCenter: parent.horizontalCenter
 
               IconImage {
-                id: iconImg
-                anchors.centerIn: parent
-                width: 18
-                height: 18
-                source: appItem.appIconUrl
-                visible: status === Image.Ready
-                opacity: appItem.appMuted ? 0.4 : 1.0
-              }
-
-              Icon {
-                anchors.centerIn: parent
-                size: 15
-                visible: !iconImg.visible
-                color: appItem.appMuted ? "#d92d20" : "#344054"
-                source: "file://" + Quickshell.shellPath(
-                  appItem.appMuted ? "assets/volume_muted.svg" : "assets/volume_high.svg"
-                )
-              }
-
-              MouseArea {
+                id: img
                 anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                  if (appItem.nodeAudio) {
-                    appItem.nodeAudio.muted = !appItem.nodeAudio.muted
-                  }
+                source: root.iconFor(cell.modelData)
+                visible: status === Image.Ready
+              }
+
+              Rectangle {
+                anchors.fill: parent
+                visible: !img.visible
+                radius: width / 4
+                color: "#d0d5dd"
+
+                Text {
+                  anchors.centerIn: parent
+                  text: (cell.modelData.name || "?").charAt(0).toUpperCase()
+                  font.pixelSize: root.iconSize * 0.45
+                  font.bold: true
+                  color: root.textColor
                 }
               }
             }
 
-            // Nome e Slider
-            ColumnLayout {
-              Layout.fillWidth: true
-              spacing: 2
+            // caixinha de atalho: ocupa sempre o espaço, para o ícone não "pular" quando ela some
+            Item {
+              width: root.iconSize
+              height: root.hintHeight
+              anchors.horizontalCenter: parent.horizontalCenter
 
-              RowLayout {
-                Layout.fillWidth: true
+              Rectangle {
+                anchors.centerIn: parent
+                visible: cell.hintShown
+                width: Math.max(root.hintHeight, hintText.implicitWidth + 12)
+                height: root.hintHeight
+                radius: 4
+                color: root.hintColor
 
                 Text {
-                  Layout.fillWidth: true
-                  text: appItem.appName
+                  id: hintText
+                  anchors.centerIn: parent
+                  text: cell.remaining.join("").toUpperCase()
+                  font.family: "monospace"
                   font.pixelSize: 10
                   font.bold: true
-                  color: appItem.appMuted ? "#98a2b3" : "#1d2939"
-                  elide: Text.ElideRight
-                }
-
-                Text {
-                  text: appItem.appMuted ? "Mudo" : (Math.round(appItem.appVol * 100) + "%")
-                  font.pixelSize: 9
-                  font.bold: true
-                  color: appItem.appMuted ? "#d92d20" : "#475467"
-                }
-              }
-
-              // Barra de Volume Horizontal
-              Item {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 12
-
-                Rectangle {
-                  id: track
-                  anchors.verticalCenter: parent.verticalCenter
-                  width: parent.width
-                  height: 4
-                  radius: 2
-                  color: "#eaecf0"
-
-                  Rectangle {
-                    height: parent.height
-                    width: Math.max(0, Math.min(parent.width, parent.width * appItem.appVol))
-                    radius: 2
-                    color: appItem.appMuted ? "#98a2b3" : "#12b76a"
-                  }
-
-                  Rectangle {
-                    x: Math.max(0, Math.min(parent.width - width, parent.width * appItem.appVol - width / 2))
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 10
-                    height: 10
-                    radius: 5
-                    color: appItem.appMuted ? "#667085" : "#027a48"
-                    border.color: "white"
-                    border.width: 1.5
-                  }
-                }
-
-                MouseArea {
-                  anchors.fill: parent
-                  cursorShape: Qt.PointingHandCursor
-
-                  function applyPos(mouseX) {
-                    if (appItem.nodeAudio) {
-                      const clamped = Math.max(0, Math.min(1.0, mouseX / track.width))
-                      appItem.nodeAudio.volume = clamped
-                    }
-                  }
-
-                  onPressed: (mouse) => applyPos(mouse.x)
-                  onPositionChanged: (mouse) => {
-                    if (pressed) applyPos(mouse.x)
-                  }
-                  onWheel: (wheel) => {
-                    if (appItem.nodeAudio) {
-                      const step = 0.02 * (wheel.angleDelta.y > 0 ? 1 : -1)
-                      appItem.nodeAudio.volume = Math.max(0, Math.min(1.0, appItem.nodeAudio.volume + step))
-                    }
-                  }
+                  color: root.hintTextColor
                 }
               }
             }
+          }
+
+          MouseArea {
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.launch(cell.index)
           }
         }
       }
+    }
+
+    // indicador de página
+    Text {
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: grid.bottom
+      anchors.topMargin: 8
+      visible: root.pageCount > 1
+      text: (root.page + 1) + " / " + root.pageCount
+      font.pixelSize: 11
+      font.bold: true
+      color: root.textColor
     }
   }
 }

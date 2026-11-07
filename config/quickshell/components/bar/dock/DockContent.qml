@@ -209,7 +209,7 @@ Item {
           width: pageView.width
           height: pageView.height
           clip: true
-          visible: pageView.currentPage === 0 || slide.running
+          visible: pageView.currentPage === 1 || slide.running
 
           Column {
             anchors.left: parent.left
@@ -234,7 +234,7 @@ Item {
           width: pageView.width
           height: pageView.height
           clip: true
-          visible: pageView.currentPage === 0 || slide.running
+          visible: pageView.currentPage === 2 || slide.running
 
           Column {
             anchors.left: parent.left

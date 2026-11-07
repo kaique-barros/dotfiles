@@ -3,7 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Widgets
 
-// Launcher em grade: lê os atalhos de ~/.local/share/applications.
+// Launcher em grade com páginas.
 // Seleção: h j k l + Enter, ou combinações de letras na caixinha embaixo de cada ícone.
 Item {
   id: root
@@ -12,9 +12,13 @@ Item {
   property bool active: false              // ligado pela dock quando esta página está visível
   property bool closeOnLaunch: true        // fecha a dock depois de lançar
 
+  // "all"  = todos os apps (como o rofi)
+  // "user" = só ~/.local/share/applications
+  property string source: "all"
+
   // grade
-  property int columns: 4
-  property int rows: 5
+  property int columns: 6
+  property int rows: 8
   property real iconSize: 56               // tamanho igual para todos os ícones
 
   // margens da área onde a grade fica centralizada (individuais)
@@ -31,7 +35,7 @@ Item {
   // caixinha de atalho
   property real hintHeight: 18
   property real hintSpacing: 6
-  property var hintKeys: ["q", "w", "e", "r", "t", "a", "s", "d", "z", "x", "c", "v", "g"]
+  property var hintKeys: ["q", "w", "e", "r", "t", "a", "s", "d", "z", "x", "c", "v"]
 
   // cores
   property color selectedColor: "#e8ebf0"
@@ -43,25 +47,36 @@ Item {
   signal launched()
   signal closeRequested()
 
-  property int selected: 0
+  property int selected: 0                 // índice dentro da página atual
+  property int page: 0
   property var typed: []                   // letras já digitadas no modo de atalho
-  property var fileIds: []                 // ids dos .desktop encontrados na pasta
+  property var fileIds: []                 // ids dos .desktop da pasta do usuário (source "user")
 
+  readonly property int perPage: columns * rows
   readonly property var alphabet: hintKeys.filter((k, i, a) => a.indexOf(k) === i)
 
-  // apps: só os da pasta, ordenados por nome, limitados ao tamanho da grade
   readonly property var apps: {
-    const all = DesktopEntries.applications.values   // dependência: reavalia quando a lista carregar
     const list = []
-    for (let i = 0; i < fileIds.length; i++) {
-      const e = DesktopEntries.byId(fileIds[i])
-      if (e && !e.noDisplay) list.push(e)
+    if (source === "user") {
+      for (let i = 0; i < fileIds.length; i++) {
+        const e = DesktopEntries.byId(fileIds[i])
+        if (e && !e.noDisplay) list.push(e)
+      }
+    } else {
+      const all = DesktopEntries.applications.values
+      for (let i = 0; i < all.length; i++) {
+        if (!all[i].noDisplay) list.push(all[i])
+      }
     }
     list.sort((a, b) => (a.name || "").toLowerCase().localeCompare((b.name || "").toLowerCase()))
-    return list.slice(0, columns * rows)
+    return list
   }
 
-  readonly property var codes: makeCodes(alphabet, apps.length)
+  readonly property int pageCount: Math.max(1, Math.ceil(apps.length / perPage))
+  onPageCountChanged: if (page >= pageCount) page = pageCount - 1
+
+  readonly property var pageApps: apps.slice(page * perPage, (page + 1) * perPage)
+  readonly property var codes: makeCodes(alphabet, pageApps.length)
 
   // ---------- códigos de atalho ----------
   function binom(n, k) {
@@ -71,7 +86,6 @@ Item {
   }
 
   // todos os códigos têm o mesmo tamanho L: o menor L em que as combinações cobrem os apps
-  // (até 13 apps -> 1 letra; até 78 -> 2 letras...)
   function makeCodes(alpha, count) {
     const n = alpha.length
     if (count <= 0 || n === 0) return []
@@ -105,20 +119,36 @@ Item {
   }
 
   function move(dc, dr) {
-    const n = apps.length
+    const n = pageApps.length
     if (n === 0) return
-    const nc = (selected % columns) + dc
-    const nr = Math.floor(selected / columns) + dr
-    if (nc < 0 || nc >= columns || nr < 0) return
-    const ni = nr * columns + nc
-    if (ni >= n) return
-    selected = ni
+    const col = selected % columns
+    const row = Math.floor(selected / columns)
+
+    if (dc !== 0) {
+      const nc = col + dc
+      if (nc < 0 || nc >= columns) return
+      const ni = row * columns + nc
+      if (ni < n) selected = ni
+      return
+    }
+
+    const nr = row + dr
+    if (nr < 0) {                                   // topo: página anterior
+      if (page > 0) { page--; selected = (rows - 1) * columns + col }
+      return
+    }
+    if (nr >= rows) {                               // fim: próxima página
+      if (page < pageCount - 1) { page++; selected = Math.min(col, pageApps.length - 1) }
+      return
+    }
+    const ni = nr * columns + col
+    if (ni < n) selected = ni
   }
 
   function launch(i) {
-    if (i < 0 || i >= apps.length) return
+    if (i < 0 || i >= pageApps.length) return
     typed = []
-    apps[i].execute()
+    pageApps[i].execute()
     launched()
   }
 
@@ -161,16 +191,21 @@ Item {
     event.accepted = true
   }
 
+  function grabFocus() {
+    if (active && visible) keys.forceActiveFocus()
+  }
+
   onActiveChanged: {
     if (active) {
       selected = 0
       typed = []
-      lister.running = true                // relê a pasta (pega atalhos novos)
-      keys.forceActiveFocus()
+      lister.running = true
+      Qt.callLater(grabFocus)              // espera a página ficar visível
     }
   }
+  onVisibleChanged: if (visible) Qt.callLater(grabFocus)
 
-  // lista os arquivos .desktop da pasta do usuário
+  // lista os arquivos .desktop da pasta do usuário (usado só com source "user")
   Process {
     id: lister
     command: ["sh", "-c", "ls -1 \"$HOME/.local/share/applications\" 2>/dev/null"]
@@ -187,7 +222,18 @@ Item {
   Item {
     id: keys
     focus: true
-    Keys.onPressed: (event) => root.handleKey(event)
+    Keys.onPressed: (event) => {
+      console.log("LAUNCHER key:", event.key, JSON.stringify(event.text))
+      root.handleKey(event)
+    }
+    onActiveFocusChanged: console.log("LAUNCHER activeFocus:", activeFocus)
+  }
+
+  // clicar no fundo também recupera o foco
+  MouseArea {
+    anchors.fill: parent
+    z: -1
+    onPressed: (mouse) => { root.grabFocus(); mouse.accepted = false }
   }
 
   // ---------- visual ----------
@@ -209,7 +255,7 @@ Item {
       height: root.rows * gridBox.cellH + (root.rows - 1) * root.spacingY
 
       Repeater {
-        model: root.apps
+        model: root.pageApps
 
         delegate: Item {
           id: cell
@@ -299,6 +345,18 @@ Item {
           }
         }
       }
+    }
+
+    // indicador de página
+    Text {
+      anchors.horizontalCenter: parent.horizontalCenter
+      anchors.top: grid.bottom
+      anchors.topMargin: 8
+      visible: root.pageCount > 1
+      text: (root.page + 1) + " / " + root.pageCount
+      font.pixelSize: 11
+      font.bold: true
+      color: root.textColor
     }
   }
 }

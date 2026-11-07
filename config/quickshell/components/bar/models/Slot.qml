@@ -10,8 +10,10 @@ Item {
   property string align: "start"       // "start" | "center" | "end"
   property real length: 40             // tamanho ao longo da barra
 
+  // O offset vem de barDrawer.dockSize, que já é o valor animado.
+  // Por isso aqui não há Behavior: animar de novo faria o item ficar para trás.
   property int offset: 0
-  property int animationTime: 250
+  property int animationTime: 250      // não é mais usado aqui
 
   readonly property bool vertical: edge === "left" || edge === "right"
   readonly property real thickness: ({
@@ -19,7 +21,6 @@ Item {
     top: bar.topSize, bottom: bar.bottomSize
   })[edge]
 
-  // trecho útil: entre as barras perpendiculares (mesma regra dos popups)
   readonly property real aMin: vertical ? bar.topSize : bar.leftSize
   readonly property real aMax: vertical ? bar.height - bar.bottomSize
                                         : bar.width - bar.rightSize
@@ -29,20 +30,8 @@ Item {
     : align === "end"    ? aMax - length - pos
     :                      aMin + pos)
 
-  // 1. Definimos o valor alvo base para x e y
-  readonly property real targetX: vertical ? (edge === "left" ? 0 + offset : bar.width - thickness - offset) : along
-  readonly property real targetY: vertical ? along : (edge === "top" ? 0 + offset : bar.height - thickness - offset)
-
-  // 2. Atribuímos x e y com animação suave de transição (Behavior on)
-  x: targetX
-  Behavior on x {
-    NumberAnimation { duration: animationTime; easing.type: barDrawer.dockActive ? Easing.OutCubic : Easing.InCubic }
-  }
-
-  y: targetY
-  Behavior on y {
-    NumberAnimation { duration: animationTime; easing.type: barDrawer.dockActive ? Easing.OutCubic : Easing.InCubic }
-  }
+  x: vertical ? (edge === "left" ? 0 + offset : bar.width - thickness - offset) : along
+  y: vertical ? along : (edge === "top" ? 0 + offset : bar.height - thickness - offset)
 
   width: vertical ? thickness : length
   height: vertical ? length : thickness

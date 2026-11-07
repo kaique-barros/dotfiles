@@ -22,16 +22,23 @@ Item {
   required property var canva
   property color frameColor: canva.frameColor
   property bool dockActive: false 
-  property int dockSize: dockActive ? canva.dockSize : 0
+  property int dockSize: 0
   property int animationTime: canva.animationTime
   property url splatterSource: canva.splatterSource
   property real splatterOpacity: canva.splatterOpacity
 
-  Behavior on dockSize {
-    NumberAnimation {
-      duration: animationTime
-      easing.type: barDrawer.dockActive ? Easing.OutCubic : Easing.InCubic
-    }
+  NumberAnimation {
+    id: dockAnim
+    target: barDrawer
+    property: "dockSize"
+    duration: barDrawer.animationTime
+  }
+
+  onDockActiveChanged: {
+    dockAnim.stop()
+    dockAnim.easing.type = dockActive ? Easing.OutCubic : Easing.InCubic
+    dockAnim.to = dockActive ? canva.dockSize : 0
+    dockAnim.start()
   }
 
   layer.enabled: true

@@ -62,7 +62,7 @@ PanelWindow {
         frameColor: canva.frameColor
         popupWidth: 30
         popupHeight: 90
-        offset: barDrawer.dockActive ? canva.dockSize : 0
+        offset: barDrawer.dockSize
         animationTime: canva.animationTime
         splatterSource: canva.splatterSource
         splatterOpacity: canva.splatterOpacity
@@ -102,7 +102,11 @@ PanelWindow {
   // ================= VOLUME NO LADO DIREITO =================
   RightVolumeBar {
     id: rightVolumeBar
-    canva: canva
+    bar: canva
+    edge: "right"
+    frameColor: canva.frameColor
+    splatterSource: canva.splatterSource
+    splatterOpacity: canva.splatterOpacity
     dockActive: barDrawer.dockActive
   }
 
@@ -117,7 +121,6 @@ PanelWindow {
 
     HoverHandler {
       id: edgeHover
-      onHoveredChanged: rightVolumeBar.edgeHovered = edgeHover.hovered
     }
   }
 
@@ -131,7 +134,7 @@ PanelWindow {
     framed: false
     popup: dockPusher
     trigger: "hover"
-    offset: barDrawer.dockActive ? canva.dockSize : 0
+    offset: barDrawer.dockSize
     animationTime: canva.animationTime
     
     onClicked: {
@@ -153,6 +156,8 @@ PanelWindow {
     length: 200
     edge: 'left'
     align: 'end'
+    offset: barDrawer.dockSize
+    animationTime: canva.animationTime
     SystemClock {
       id: sysClock
       precision: SystemClock.Seconds
@@ -174,7 +179,7 @@ PanelWindow {
     edge: "left"
     align: "start"
     pos: 0
-    offset: barDrawer.dockActive ? canva.dockSize : 0     // acompanha a dock, como o archItem
+    offset: barDrawer.dockSize
     animationTime: canva.animationTime
   }
 

@@ -1,7 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 
 import "../models"
 import "."
@@ -14,14 +16,31 @@ Item {
 
   // Largura e altura da dock
   width: canva.dockSize
-  height: canva.height - canva.topSize - canva.bottomSize
-  y: canva.topSize
+  height: canva.height
+  y: 0
 
-  // Deslocamento para animar junto com a expansão da dock
-  // Quando inativa, fica na posição -canva.dockSize (oculta atrás da barra)
-  x: barDrawer.dockActive ? canva.leftSize : (canva.leftSize - canva.dockSize)
-  visible: barDrawer.dockSize > 0.5 || barDrawer.dockActive
+  x: barDrawer.dockSize - width
+  visible: barDrawer.dockSize > 0.5
   clip: true
+
+  function nextPage() { pageView.currentPage = Math.min(pageView.totalPages - 1, pageView.currentPage + 1) }
+  function prevPage() { pageView.currentPage = Math.max(0, pageView.currentPage - 1) }
+
+  GlobalShortcut { appid: "quickshell"; name: "dockNext"; description: "Próxima página da dock"; onPressed: root.nextPage() }
+  GlobalShortcut { appid: "quickshell"; name: "dockPrev"; description: "Página anterior da dock"; onPressed: root.prevPage() }
+
+  // F e G só são capturados enquanto a dock está aberta
+  function setShortcutsBound(on) {
+    Quickshell.execDetached(["hyprctl", "--batch", on
+      ? "keyword bind , F, global, quickshell:dockNext ; keyword bind , G, global, quickshell:dockPrev"
+      : "keyword unbind , F ; keyword unbind , G"])
+  }
+
+  Connections {
+    target: root.barDrawer
+    function onDockActiveChanged() { root.setShortcutsBound(root.barDrawer.dockActive) }
+  }
+  Component.onDestruction: root.setShortcutsBound(false)
 
   Behavior on x {
     NumberAnimation {
@@ -32,30 +51,31 @@ Item {
 
   // ================= 1. RETÂNGULO SEPARADOR COM SOMBRA INTERNA =================
   // Retângulo com cantos arredondados e sombra interna separando o conteúdo da dock
+  // sombra à direita, do topo ao fim da tela, desvanecendo para a esquerda
+  Rectangle {
+    id: dockShadow
+    property real fadeWidth: 220      // até onde a sombra se espalha para a esquerda
+    property real strength: 0.22
+    anchors.top: parent.top
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    width: fadeWidth
+    gradient: Gradient {
+      orientation: Gradient.Horizontal
+      GradientStop { position: 0.0; color: Qt.rgba(0, 0, 0, 0) }
+      GradientStop { position: 0.7; color: Qt.rgba(0, 0, 0, dockShadow.strength * 0.2) }
+      GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, dockShadow.strength) }
+    }
+  }
+
+  // caixa de layout do conteúdo (invisível)
   Item {
     id: separatorContainer
     anchors.fill: parent
-    anchors.topMargin: 10
-    anchors.bottomMargin: 10
+    anchors.topMargin: 10 + canva.topSize
+    anchors.bottomMargin: 10 + canva.bottomSize
     anchors.leftMargin: 8
     anchors.rightMargin: 12
-
-    Rectangle {
-      id: separatorBg
-      anchors.fill: parent
-      radius: canva.internalRadius + 4
-      color: "transparent"
-      border.color: "#e2e5ec"
-      border.width: 1
-    }
-
-    InnerShadow {
-      anchors.fill: parent
-      radius: canva.internalRadius + 4
-      size: 10
-      color: "black"
-      strength: 0.22
-    }
   }
 
   // ================= 2. CONTEÚDO PRINCIPAL DA DOCK =================
@@ -135,20 +155,6 @@ Item {
             anchors.top: parent.top
             anchors.topMargin: 14
             spacing: 2
-
-            Text {
-              text: "MULTIMEDIA"
-              font.pixelSize: 12
-              font.bold: true
-              font.letterSpacing: 1.5
-              color: "#344054"
-            }
-
-            Text {
-              text: "Painel de áudio e mídias"
-              font.pixelSize: 10
-              color: "#667085"
-            }
           }
         }
 
@@ -165,20 +171,6 @@ Item {
             anchors.top: parent.top
             anchors.topMargin: 14
             spacing: 2
-
-            Text {
-              text: "PÁGINA 2"
-              font.pixelSize: 12
-              font.bold: true
-              font.letterSpacing: 1.5
-              color: "#344054"
-            }
-
-            Text {
-              text: "Seção reservada para novos módulos"
-              font.pixelSize: 10
-              color: "#667085"
-            }
           }
 
           Rectangle {
@@ -212,20 +204,6 @@ Item {
             anchors.top: parent.top
             anchors.topMargin: 14
             spacing: 2
-
-            Text {
-              text: "PÁGINA 3"
-              font.pixelSize: 12
-              font.bold: true
-              font.letterSpacing: 1.5
-              color: "#344054"
-            }
-
-            Text {
-              text: "Seção reservada para novos módulos"
-              font.pixelSize: 10
-              color: "#667085"
-            }
           }
 
           Rectangle {

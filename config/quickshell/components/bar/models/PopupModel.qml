@@ -201,10 +201,14 @@ Item {
     clip: true
   }
 
+  // anima o deslocamento (dock) e a posição ao longo da barra, nunca a profundidade
+  Behavior on depth { NumberAnimation { duration: root.animationTime; easing.type: Easing.OutCubic } }
   Behavior on x {
+    enabled: !root.vertical
     NumberAnimation { duration: animationTime; easing.type: barDrawer.dockActive ? Easing.OutCubic : Easing.InCubic }
   }
   Behavior on y {
+    enabled: root.vertical
     NumberAnimation { duration: animationTime; easing.type: barDrawer.dockActive ? Easing.OutCubic : Easing.InCubic }
   }
 }

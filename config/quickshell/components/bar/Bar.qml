@@ -32,7 +32,7 @@ PanelWindow {
   property int dockAnimationTime: animationTime
   property color frameColor: "white"
   property url splatterSource: "file://" + Quickshell.shellPath("assets/splatter.png")
-  property real splatterOpacity: 0.35
+  property real splatterOpacity: 0.2
 
   property color itemBackgroundColor: "gray"
   property real itemBackgroundOpacity: 1
@@ -79,6 +79,42 @@ PanelWindow {
           color: "black"
           size: 15
         }
+      }
+
+      WifiPopup {
+        id: wifiPopup
+        bar: canva
+        frameColor: canva.frameColor
+        splatterSource: canva.splatterSource
+        splatterOpacity: canva.splatterOpacity
+        offset: barDrawer.dockSize
+        animationTime: canva.animationTime
+        open: connectivity.openIndex === 0
+        pos: connectivity.popupCenter - popupHeight / 2
+      }
+
+      BluetoothPopup {
+        id: btPopup
+        bar: canva
+        frameColor: canva.frameColor
+        splatterSource: canva.splatterSource
+        splatterOpacity: canva.splatterOpacity
+        offset: barDrawer.dockSize
+        animationTime: canva.animationTime
+        open: connectivity.openIndex === 1
+        pos: connectivity.popupCenter - popupHeight / 2
+      }
+
+      PowerPopup {
+        id: powerPopup
+        bar: canva
+        frameColor: canva.frameColor
+        splatterSource: canva.splatterSource
+        splatterOpacity: canva.splatterOpacity
+        offset: barDrawer.dockSize
+        animationTime: canva.animationTime
+        open: connectivity.openIndex === 2
+        pos: connectivity.popupCenter - popupHeight / 2
       }
     }
 
@@ -150,31 +186,6 @@ PanelWindow {
     }
   }
 
-  BarItemModel {
-    id: clock
-    bar: canva
-    pos: 40
-    length: 200
-    edge: 'left'
-    align: 'end'
-    offset: barDrawer.dockSize
-    animationTime: canva.animationTime
-    SystemClock {
-      id: sysClock
-      precision: SystemClock.Seconds
-    }
-    Column {
-      Text {
-        text: sysClock.hours
-        color: 'black'
-      }
-      Text {
-        text: sysClock.minutes
-        color: 'black'
-      }
-    }
-  }
-
   Workspaces {
     bar: canva
     edge: "left"
@@ -182,6 +193,57 @@ PanelWindow {
     pos: 0
     offset: barDrawer.dockSize
     animationTime: canva.animationTime
+  }
+
+  Tray {
+    id: tray
+    bar: canva
+    edge: "left"
+    align: "end"
+    pos: 10
+    z: 10
+    offset: barDrawer.dockSize
+    animationTime: canva.animationTime
+  }
+
+  Battery {
+    id: battery
+    bar: canva
+    edge: "left"
+    align: "end"
+    pos: 10 + tray.collapsedLength
+    offset: barDrawer.dockSize
+    animationTime: canva.animationTime
+    enabled: !tray.open
+    opacity: tray.open ? 0 : 1
+    Behavior on opacity { NumberAnimation { duration: tray.expandDuration } }
+
+  }
+
+  Clock {
+    id: clock
+    bar: canva
+    edge: "left"
+    align: "end"
+    pos: battery.pos + battery.length + 4
+    offset: barDrawer.dockSize
+    animationTime: canva.animationTime
+    enabled: !tray.open
+    opacity: tray.open ? 0 : 1
+    Behavior on opacity { NumberAnimation { duration: tray.expandDuration } }
+
+  }
+
+  Connectivity {
+    id: connectivity
+    bar: canva
+    edge: "left"
+    align: "end"
+    pos: Math.max(clock.pos + clock.length - 8,       // posição normal, acima do relógio
+                  tray.pos + tray.length - 8)
+    offset: barDrawer.dockSize
+    animationTime: canva.animationTime
+    popupList: [wifiPopup, btPopup, powerPopup]
   }
 
   // Região clicável
@@ -211,6 +273,10 @@ PanelWindow {
       intersection: Intersection.Combine
       item: rightVolumeBar
     }
+
+    Region { intersection: Intersection.Combine; item: wifiPopup }
+    Region { intersection: Intersection.Combine; item: btPopup }
+    Region { intersection: Intersection.Combine; item: powerPopup }
   }
 
   // Espaço reservado para a barra

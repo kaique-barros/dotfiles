@@ -3,18 +3,28 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Widgets
 
-// Launcher em grade com páginas.
-// Seleção: h j k l + Enter, ou combinações de letras na caixinha embaixo de cada ícone.
+// Launcher em grade com páginas, busca (/) e ordenação por uso.
+// Normal: h j k l / setas movem, Enter lança, o = próxima página, O = anterior,
+//         letras das caixinhas lançam direto, / abre a busca.
+// Busca:  digite para filtrar (nome, nome genérico, keywords, comentário, comando),
+//         setas / Tab movem, Enter lança, Esc sai da busca.
 Item {
   id: root
 
   // ================= CONFIGURAÇÕES =================
+  // ordenação: "usage" = mais usados primeiro (histórico do rofi + lançamentos feitos aqui)
+  //            "alpha" = ordem alfabética
+  property string sortMode: "usage"
+
   property bool active: false              // ligado pela dock quando esta página está visível
   property bool closeOnLaunch: true        // fecha a dock depois de lançar
 
-  // "all"  = todos os apps (como o rofi)
-  // "user" = só ~/.local/share/applications
+  // "all"  = todos os apps (como o rofi) | "user" = só ~/.local/share/applications
   property string source: "all"
+
+  // histórico de uso (formato "contagem id" por linha)
+  property string rofiHistory: "${XDG_CACHE_HOME:-$HOME/.cache}/rofi3.druncache"
+  property string usageFile: "${XDG_CACHE_HOME:-$HOME/.cache}/quickshell-launcher.usage"
 
   // grade
   property int columns: 6
@@ -37,11 +47,16 @@ Item {
   property real hintSpacing: 6
   property var hintKeys: ["q", "w", "e", "r", "t", "a", "s", "d", "z", "x", "c", "v"]
 
+  // caixa de busca
+  property real searchHeight: 34
+  property real searchMarginBottom: 14
+
   // cores
   property color selectedColor: "#e8ebf0"
   property color hintColor: "#1e1e2e"
   property color hintTextColor: "white"
   property color textColor: "#344054"
+  property color searchColor: "#e8ebf0"
   // =================================================
 
   signal launched()
@@ -51,11 +66,27 @@ Item {
   property int page: 0
   property var typed: []                   // letras já digitadas no modo de atalho
   property var fileIds: []                 // ids dos .desktop da pasta do usuário (source "user")
+  property var usage: ({})                 // id normalizado -> contagem
+
+  property bool searching: false
+  property string query: ""
 
   readonly property int perPage: columns * rows
   readonly property var alphabet: hintKeys.filter((k, i, a) => a.indexOf(k) === i)
 
-  readonly property var apps: {
+  // ---------- lista de apps ----------
+  function normId(s) {
+    return String(s || "").trim().split("/").pop().replace(/\.desktop$/, "").toLowerCase()
+  }
+
+  function joinList(l) {
+    if (!l) return ""
+    let s = ""
+    for (let i = 0; i < l.length; i++) s += " " + l[i]
+    return s
+  }
+
+  readonly property var entries: {
     const list = []
     if (source === "user") {
       for (let i = 0; i < fileIds.length; i++) {
@@ -68,8 +99,49 @@ Item {
         if (!all[i].noDisplay) list.push(all[i])
       }
     }
-    list.sort((a, b) => (a.name || "").toLowerCase().localeCompare((b.name || "").toLowerCase()))
     return list
+  }
+
+  // entradas com os textos já em minúsculas, para a ordenação e a busca
+  readonly property var indexed: entries.map(e => {
+    const main = ((e.name || "") + " " + (e.genericName || "") + joinList(e.keywords)
+                  + " " + (e.id || "")).toLowerCase()
+    return {
+      e: e,
+      key: normId(e.id),
+      name: (e.name || "").toLowerCase(),
+      main: main,
+      all: main + " " + (e.comment || "").toLowerCase() + " " + (e.execString || "").toLowerCase()
+    }
+  })
+
+  readonly property var sortedIdx: {
+    const list = indexed.slice()
+    const byName = (a, b) => a.name.localeCompare(b.name)
+    if (sortMode === "usage")
+      list.sort((a, b) => ((usage[b.key] || 0) - (usage[a.key] || 0)) || byName(a, b))
+    else
+      list.sort(byName)
+    return list
+  }
+
+  readonly property var apps: {
+    const q = query.toLowerCase().trim()
+    if (!searching || q === "") return sortedIdx.map(o => o.e)
+
+    const tokens = q.split(/\s+/)
+    const hits = []
+    for (let i = 0; i < sortedIdx.length; i++) {
+      const o = sortedIdx[i]
+      if (!tokens.every(t => o.all.indexOf(t) >= 0)) continue
+      let tier = 3                                          // só no comentário / comando
+      if (o.name.startsWith(q)) tier = 0                    // nome começa com a busca
+      else if (tokens.every(t => o.name.indexOf(t) >= 0)) tier = 1   // nome contém
+      else if (tokens.every(t => o.main.indexOf(t) >= 0)) tier = 2   // alias / keywords / id
+      hits.push({ o: o, tier: tier, pos: i })
+    }
+    hits.sort((a, b) => (a.tier - b.tier) || (a.pos - b.pos))
+    return hits.map(h => h.o.e)
   }
 
   readonly property int pageCount: Math.max(1, Math.ceil(apps.length / perPage))
@@ -77,6 +149,35 @@ Item {
 
   readonly property var pageApps: apps.slice(page * perPage, (page + 1) * perPage)
   readonly property var codes: makeCodes(alphabet, pageApps.length)
+
+  onQueryChanged: { page = 0; selected = 0 }
+
+  // ---------- histórico de uso ----------
+  function parseUsage(text) {
+    const u = {}
+    const lines = text.split("\n")
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(/^\s*(\d+)\s+(.+?)\s*$/)
+      if (!m) continue
+      const key = normId(m[2])
+      u[key] = (u[key] || 0) + parseInt(m[1])
+    }
+    usage = u
+  }
+
+  function recordUse(e) {
+    if (!e) return
+    const key = normId(e.id)
+    const u = Object.assign({}, usage)
+    u[key] = (u[key] || 0) + 1
+    usage = u
+
+    // grava no arquivo próprio (não mexe no cache do rofi)
+    const script = 'f="' + usageFile + '"; touch "$f"; ' +
+      "awk -v id=\"$1\" 'BEGIN{d=0} $2==id{print $1+1, $2; d=1; next} {print} END{if(!d) print 1, id}' " +
+      '"$f" > "$f.tmp" && mv "$f.tmp" "$f"'
+    Quickshell.execDetached(["sh", "-c", script, "sh", key])
+  }
 
   // ---------- códigos de atalho ----------
   function binom(n, k) {
@@ -145,11 +246,44 @@ Item {
     if (ni < n) selected = ni
   }
 
+  // anda de item em item atravessando as páginas (Tab / Shift+Tab)
+  function step(delta) {
+    const total = apps.length
+    if (total === 0) return
+    const gi = Math.max(0, Math.min(total - 1, page * perPage + selected + delta))
+    page = Math.floor(gi / perPage)
+    selected = gi % perPage
+  }
+
+  // troca de página com volta ao início/fim
+  function goPage(delta) {
+    page = (page + delta + pageCount) % pageCount
+    selected = Math.min(selected, Math.max(0, pageApps.length - 1))
+  }
+
+  function startSearch() {
+    searching = true
+    query = ""
+    typed = []
+    selected = 0
+    page = 0
+  }
+
+  function endSearch() {
+    searching = false
+    query = ""
+    selected = 0
+    page = 0
+  }
+
   function launch(i) {
     if (i < 0 || i >= pageApps.length) return
     typed = []
-    pageApps[i].execute()
+    const e = pageApps[i]
+    recordUse(e)
+    e.execute()
     launched()
+    if (searching) endSearch()
   }
 
   function typeLetter(ch) {
@@ -175,13 +309,33 @@ Item {
     if (k === Qt.Key_Return || k === Qt.Key_Enter) {
       if (!event.isAutoRepeat) launch(selected)
     } else if (k === Qt.Key_Escape) {
-      if (typed.length > 0) typed = []
+      if (searching) endSearch()
+      else if (typed.length > 0) typed = []
       else closeRequested()
     } else if (k === Qt.Key_Backspace) {
-      typed = typed.slice(0, -1)
+      if (searching) {
+        if (query.length > 0) query = query.slice(0, -1)
+        else endSearch()
+      } else {
+        typed = typed.slice(0, -1)
+      }
+    } else if (k === Qt.Key_Left) move(-1, 0)
+    else if (k === Qt.Key_Right) move(1, 0)
+    else if (k === Qt.Key_Up) move(0, -1)
+    else if (k === Qt.Key_Down) move(0, 1)
+    else if (k === Qt.Key_Tab) step(1)
+    else if (k === Qt.Key_Backtab) step(-1)
+    else if (searching) {
+      const t = event.text
+      if (t.length === 1 && t.charCodeAt(0) >= 32) query += t
+      else return
     } else {
-      const ch = (event.text || "").toLowerCase()
-      if (ch === "h") move(-1, 0)
+      const raw = event.text
+      const ch = raw.toLowerCase()
+      if (raw === "/") startSearch()
+      else if (raw === "o") goPage(1)
+      else if (raw === "O") goPage(-1)
+      else if (ch === "h") move(-1, 0)
       else if (ch === "l") move(1, 0)
       else if (ch === "j") move(0, 1)
       else if (ch === "k") move(0, -1)
@@ -198,9 +352,14 @@ Item {
   onActiveChanged: {
     if (active) {
       selected = 0
+      page = 0
       typed = []
-      lister.running = true
-      Qt.callLater(grabFocus)              // espera a página ficar visível
+      lister.running = true                // relê a pasta (pega atalhos novos)
+      usageReader.running = true           // relê o histórico de uso
+      Qt.callLater(grabFocus)
+    } else {
+      searching = false
+      query = ""
     }
   }
   onVisibleChanged: if (visible) Qt.callLater(grabFocus)
@@ -219,14 +378,20 @@ Item {
     }
   }
 
+  // histórico do rofi + o nosso, somados
+  Process {
+    id: usageReader
+    command: ["sh", "-c", 'cat "' + root.rofiHistory + '" "' + root.usageFile + '" 2>/dev/null']
+    running: true
+    stdout: StdioCollector {
+      onStreamFinished: root.parseUsage(text)
+    }
+  }
+
   Item {
     id: keys
     focus: true
-    Keys.onPressed: (event) => {
-      console.log("LAUNCHER key:", event.key, JSON.stringify(event.text))
-      root.handleKey(event)
-    }
-    onActiveFocusChanged: console.log("LAUNCHER activeFocus:", activeFocus)
+    Keys.onPressed: (event) => root.handleKey(event)
   }
 
   // clicar no fundo também recupera o foco
@@ -263,7 +428,7 @@ Item {
           required property int index
 
           readonly property var code: root.codes[index] || []
-          readonly property bool hintShown: root.matches(code)
+          readonly property bool hintShown: !root.searching && root.matches(code)
           readonly property var remaining: code.filter(c => root.typed.indexOf(c) < 0)
 
           x: (index % root.columns) * (gridBox.cellW + root.spacingX)
@@ -357,6 +522,89 @@ Item {
       font.pixelSize: 11
       font.bold: true
       color: root.textColor
+    }
+  }
+
+  // sem resultados
+  Text {
+    anchors.centerIn: parent
+    visible: root.searching && root.query.trim() !== "" && root.apps.length === 0
+    text: "Nenhum app encontrado"
+    font.pixelSize: 12
+    font.italic: true
+    color: "#98a2b3"
+  }
+
+  // ---------- caixa de busca (no fim da dock) ----------
+  Rectangle {
+    id: searchBox
+    visible: root.searching
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.bottom: parent.bottom
+    anchors.bottomMargin: root.searchMarginBottom
+    width: parent.width - root.marginLeft - root.marginRight
+    height: root.searchHeight
+    radius: 10
+    color: root.searchColor
+
+    Text {
+      id: slash
+      anchors.left: parent.left
+      anchors.leftMargin: 12
+      anchors.verticalCenter: parent.verticalCenter
+      text: "/"
+      font.family: "monospace"
+      font.pixelSize: 14
+      font.bold: true
+      color: "#667085"
+    }
+
+    Text {
+      id: queryText
+      anchors.left: slash.right
+      anchors.leftMargin: 8
+      anchors.verticalCenter: parent.verticalCenter
+      text: root.query
+      font.pixelSize: 13
+      color: root.textColor
+    }
+
+    // cursor piscando
+    Rectangle {
+      anchors.left: queryText.right
+      anchors.leftMargin: 1
+      anchors.verticalCenter: parent.verticalCenter
+      width: 2
+      height: 16
+      color: root.textColor
+      visible: root.searching
+
+      SequentialAnimation on opacity {
+        running: root.searching
+        loops: Animation.Infinite
+        NumberAnimation { to: 0; duration: 500 }
+        NumberAnimation { to: 1; duration: 500 }
+      }
+    }
+
+    Text {
+      anchors.left: slash.right
+      anchors.leftMargin: 8
+      anchors.verticalCenter: parent.verticalCenter
+      visible: root.query === ""
+      text: "buscar app..."
+      font.pixelSize: 13
+      color: "#98a2b3"
+    }
+
+    Text {
+      anchors.right: parent.right
+      anchors.rightMargin: 12
+      anchors.verticalCenter: parent.verticalCenter
+      text: root.apps.length
+      font.pixelSize: 11
+      font.bold: true
+      color: "#667085"
     }
   }
 }

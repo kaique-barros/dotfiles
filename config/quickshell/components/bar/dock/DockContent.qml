@@ -49,9 +49,17 @@ Item {
       : "keyword unbind , F ; keyword unbind , G"])
   }
 
+  function syncShortcuts() {
+    setShortcutsBound(barDrawer.dockActive && !launcher.searching)
+  }
+
   Connections {
     target: root.barDrawer
-    function onDockActiveChanged() { root.setShortcutsBound(root.barDrawer.dockActive) }
+    function onDockActiveChanged() { root.syncShortcuts() }
+  }
+  Connections {
+    target: launcher
+    function onSearchingChanged() { root.syncShortcuts() }
   }
 
   Component.onDestruction: root.setShortcutsBound(false)
@@ -63,7 +71,7 @@ Item {
     id: dockShadow
     anchors.fill: parent
 
-    property real size: 6                                    // mesma ordem de grandeza da sombra da borda
+    property real size: 2                                   // mesma ordem de grandeza da sombra da borda
     property real strength: 0.3
     property real reach: canva.dockSize - 6
 

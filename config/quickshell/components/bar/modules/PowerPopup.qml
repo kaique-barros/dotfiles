@@ -12,6 +12,12 @@ PopupModel {
   property color hoverColor: "#e8ebf0"
   property color selectedColor: "#12b76a"
   property color textColor: "#1d2939"
+
+  // Separadores
+  property real headerDividerRatio: 0.9
+  property real itemDividerRatio: 0.8
+  property real dividerThickness: 1.5
+  property color dividerColor: "#c7cdd6"
   // =================================================
 
   readonly property var options: {
@@ -27,7 +33,7 @@ PopupModel {
   edge: "left"
   padding: 8
   popupWidth: 200
-  popupHeight: 2 * padding + headerHeight + 30 + options.length * rowHeight
+  popupHeight: 2 * padding + headerHeight + 37 + options.length * rowHeight
 
   Column {
     width: parent.width
@@ -43,12 +49,22 @@ PopupModel {
       color: root.textColor
     }
 
+    // Separador principal
+    Rectangle {
+      width: parent.width * root.headerDividerRatio
+      height: root.dividerThickness
+      anchors.horizontalCenter: parent.horizontalCenter
+      color: root.dividerColor
+    }
+
     Repeater {
       model: root.options
 
       delegate: Rectangle {
         id: row
         required property var modelData
+        required property int index
+
         readonly property bool selected: PowerProfiles.profile === modelData.profile
 
         width: parent.width
@@ -83,6 +99,16 @@ PopupModel {
           hoverEnabled: true
           cursorShape: Qt.PointingHandCursor
           onClicked: PowerProfiles.profile = row.modelData.profile
+        }
+
+        // Separador entre perfis
+        Rectangle {
+          anchors.bottom: parent.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          width: parent.width * root.itemDividerRatio
+          height: root.dividerThickness
+          color: root.dividerColor
+          visible: row.index < root.options.length - 1
         }
       }
     }

@@ -18,6 +18,7 @@ Slot {
   property string trigger: "click"        // "click" | "hover"
   property string popupAlign: "center"    // "start" | "center" | "end"
   property int hoverCloseDelay: 150
+  readonly property bool hovered: mouseArea.containsMouse
 
   default property alias content: contentArea.data
 
@@ -68,7 +69,6 @@ Slot {
     onClicked: {
       root.clicked()
       root.togglePopup()
-      console.log("MouseArea clicada com sucesso!", Date.now())
     }
 
     onEntered: {
@@ -103,6 +103,12 @@ Slot {
     id: closeTimer
     interval: root.hoverCloseDelay
     onTriggered: {
+      if (root.popup
+          && root.popup.open
+          && root.popup.bar
+          && root.popup.bar.dockActive)
+        return
+
       if (!mouseArea.containsMouse && (!root.popup || !root.popup.hovered)) {
         root.closePopup()
       }

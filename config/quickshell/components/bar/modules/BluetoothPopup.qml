@@ -14,6 +14,12 @@ PopupModel {
   property color textColor: "#1d2939"
   property color mutedColor: "#667085"
   property color activeColor: "#12b76a"
+
+  // Separadores
+  property real headerDividerRatio: 0.9
+  property real itemDividerRatio: 0.8
+  property real dividerThickness: 1.5
+  property color dividerColor: "#c7cdd6"
   // =================================================
 
   readonly property var adapter: Bluetooth.defaultAdapter
@@ -28,12 +34,13 @@ PopupModel {
     out.sort((a, b) => Number(b.connected) - Number(a.connected))
     return out
   }
+
   readonly property int shownRows: Math.min(maxRows, paired.length)
 
   edge: "left"
   padding: 8
   popupWidth: 230
-  popupHeight: 2 * padding + headerHeight + 6 + Math.max(1, shownRows) * rowHeight
+  popupHeight: 2 * padding + headerHeight + 13 + Math.max(1, shownRows) * rowHeight
 
   Column {
     width: parent.width
@@ -51,6 +58,7 @@ PopupModel {
         font.pixelSize: 13
         color: root.textColor
       }
+
       ToggleSwitch {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
@@ -58,6 +66,14 @@ PopupModel {
         checked: !!root.adapter && root.adapter.enabled
         onToggled: if (root.adapter) root.adapter.enabled = !root.adapter.enabled
       }
+    }
+
+    // Separador principal
+    Rectangle {
+      width: parent.width * root.headerDividerRatio
+      height: root.dividerThickness
+      anchors.horizontalCenter: parent.horizontalCenter
+      color: root.dividerColor
     }
 
     Text {
@@ -77,6 +93,7 @@ PopupModel {
       delegate: Rectangle {
         id: row
         required property var modelData
+        required property int index
 
         width: parent.width
         height: root.rowHeight
@@ -126,6 +143,16 @@ PopupModel {
             if (row.modelData.connected) row.modelData.disconnect()
             else row.modelData.connect()
           }
+        }
+
+        // Separador entre dispositivos
+        Rectangle {
+          anchors.bottom: parent.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          width: parent.width * root.itemDividerRatio
+          height: root.dividerThickness
+          color: root.dividerColor
+          visible: row.index < root.shownRows - 1
         }
       }
     }

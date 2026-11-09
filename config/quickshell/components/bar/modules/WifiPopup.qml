@@ -15,6 +15,12 @@ PopupModel {
   property color textColor: "#1d2939"
   property color mutedColor: "#667085"
   property color activeColor: "#12b76a"
+
+  // Separadores
+  property real headerDividerRatio: 0.9
+  property real itemDividerRatio: 0.8
+  property real dividerThickness: 1.5
+  property color dividerColor: "#c7cdd6"
   // =================================================
 
   property bool wifiOn: true
@@ -24,7 +30,7 @@ PopupModel {
   edge: "left"
   padding: 8
   popupWidth: 230
-  popupHeight: 2 * padding + headerHeight + 6 + Math.max(1, shownRows) * rowHeight
+  popupHeight: 2 * padding + headerHeight + 13 + Math.max(1, shownRows) * rowHeight
 
   function refresh() {
     radioProc.running = true
@@ -93,12 +99,21 @@ PopupModel {
         font.pixelSize: 13
         color: root.textColor
       }
+
       ToggleSwitch {
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         checked: root.wifiOn
         onToggled: root.setWifi(!root.wifiOn)
       }
+    }
+
+    // Separador principal
+    Rectangle {
+      width: parent.width * root.headerDividerRatio
+      height: root.dividerThickness
+      anchors.horizontalCenter: parent.horizontalCenter
+      color: root.dividerColor
     }
 
     Text {
@@ -118,6 +133,7 @@ PopupModel {
       delegate: Rectangle {
         id: row
         required property var modelData
+        required property int index
 
         width: parent.width
         height: root.rowHeight
@@ -164,6 +180,16 @@ PopupModel {
           hoverEnabled: true
           cursorShape: Qt.PointingHandCursor
           onClicked: root.connectTo(row.modelData.ssid)
+        }
+
+        // Separador entre redes
+        Rectangle {
+          anchors.bottom: parent.bottom
+          anchors.horizontalCenter: parent.horizontalCenter
+          width: parent.width * root.itemDividerRatio
+          height: root.dividerThickness
+          color: root.dividerColor
+          visible: row.index < root.shownRows - 1
         }
       }
     }

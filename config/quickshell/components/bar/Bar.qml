@@ -24,7 +24,7 @@ PanelWindow {
   property int bottomSize: 0
   property int leftSize: 60
   property int rightSize: 0
-  property int internalRadius: 10
+  property int internalRadius: 20
 
   // ================= CONFIGURAÇÕES GLOBAIS UNIFICADAS =================
   property int dockSize: 650
@@ -59,7 +59,6 @@ PanelWindow {
         id: dockPusher
         bar: canva
         edge: "left"
-        open: barDrawer.dockActive
         frameColor: canva.frameColor
         popupWidth: 30
         popupHeight: 90
@@ -67,6 +66,7 @@ PanelWindow {
         animationTime: canva.animationTime
         splatterSource: canva.splatterSource
         splatterOpacity: canva.splatterOpacity
+        open: barDrawer.dockActive || archIcon.hovered || hovered
 
         Icon {
           id: popupIcon
@@ -136,15 +136,17 @@ PanelWindow {
     barDrawer: barDrawer
   }
 
-  // ================= VOLUME NO LADO DIREITO =================
-  RightVolumeBar {
-    id: rightVolumeBar
+  // ================= CONTROLES NO LADO DIREITO =================
+  RightControlsBar {
+    id: rightControlsBar
     bar: canva
     edge: "right"
+    z: 100
     frameColor: canva.frameColor
     splatterSource: canva.splatterSource
     splatterOpacity: canva.splatterOpacity
     dockActive: barDrawer.dockActive
+    edgeHovered: edgeHover.hovered
   }
 
   // Detector na borda direita para disparar o volume por aproximação
@@ -271,7 +273,7 @@ PanelWindow {
 
     Region {
       intersection: Intersection.Combine
-      item: rightVolumeBar
+      item: rightControlsBar
     }
 
     Region { intersection: Intersection.Combine; item: wifiPopup }

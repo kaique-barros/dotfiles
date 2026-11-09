@@ -16,6 +16,9 @@ PopupModel {
   popupHeight: 210
   padding: 6
   pos: Math.round((bar.height - popupHeight) / 2)
+
+  // largura útil dentro do popup (não depende do conteúdo, evita loop de binding)
+  readonly property real contentWidth: popupWidth - 2 * padding
   // =================================================
 
   // ================= VISIBILIDADE =================
@@ -90,14 +93,20 @@ PopupModel {
   property real currentBrightness: 0
   property bool brightnessInitialized: false
 
-  function readBrightness(line) {
-    const fields = line.trim().split(",")
+  property real pendingBrightness: -1     // próximo valor a enviar ao brightnessctl
+  property real holdUntil: 0              // ignora leituras logo depois de você mexer
+  property bool queryAgain: false         // chegou outro evento enquanto lia
 
+  function readBrightness(line) {
+
+    if (Date.now() < holdUntil || pendingBrightness >= 0)
+      return
+
+    const fields = line.trim().split(",")
     if (fields.length < 5)
       return
 
-    const percentage = parseFloat(fields[4].replace("%", ""))
-
+    const percentage = parseFloat(fields[3].replace("%", ""))
     if (isNaN(percentage))
       return
 
@@ -115,28 +124,49 @@ PopupModel {
     }
   }
 
+  // lê o brilho; se já estiver lendo, lê de novo ao terminar (não perde o valor final)
+  function requestBrightnessRead() {
+    if (brightnessQuery.running) queryAgain = true
+    else brightnessQuery.running = true
+  }
+
   function setBrightness(value) {
-    const percentage = Math.max(1, Math.min(100, Math.round(value * 100)))
+    const v = Math.max(0.01, Math.min(1, value))
 
-    brightnessSetter.running = false
-    brightnessSetter.command = [
-      "brightnessctl",
-      "-q",
-      "set",
-      percentage + "%"
-    ]
-    brightnessSetter.running = true
-
+    currentBrightness = v               // a barra e o número mudam na hora
+    brightnessInitialized = true
+    pendingBrightness = v
+    holdUntil = Date.now() + 700
     triggerOSD("brightness")
+
+    if (!brightnessSetter.running)
+      flushBrightness()
+  }
+
+  function flushBrightness() {
+    if (pendingBrightness < 0)
+      return
+
+    const percentage = Math.round(pendingBrightness * 100)
+    pendingBrightness = -1
+
+    brightnessSetter.command = ["brightnessctl", "-q", "set", percentage + "%"]
+    brightnessSetter.running = true
   }
 
   Process {
     id: brightnessQuery
-
     command: ["brightnessctl", "-m"]
 
     stdout: SplitParser {
       onRead: line => root.readBrightness(line)
+    }
+
+    onExited: {
+      if (root.queryAgain) {
+        root.queryAgain = false
+        running = true
+      }
     }
   }
 
@@ -144,23 +174,26 @@ PopupModel {
     id: brightnessSetter
 
     onExited: {
-      if (!brightnessQuery.running)
-        brightnessQuery.running = true
+      if (root.pendingBrightness >= 0)
+        root.flushBrightness()          // chegou um valor novo enquanto rodava
     }
   }
 
-  Component.onCompleted: brightnessQuery.running = true
-
-  Timer {
-    interval: 1000
+  // escuta os eventos de backlight do kernel (sem timer)
+  Process {
+    id: brightnessWatcher
+    command: ["udevadm", "monitor", "--udev", "--subsystem-match=backlight"]
     running: true
-    repeat: true
 
-    onTriggered: {
-      if (!brightnessQuery.running)
-        brightnessQuery.running = true
+    stdout: SplitParser {
+      onRead: line => {
+        if (line.indexOf("change") >= 0)
+          root.requestBrightnessRead()
+      }
     }
   }
+
+  Component.onCompleted: requestBrightnessRead()
 
   // ================= CONTEÚDO =================
   Row {
@@ -171,7 +204,7 @@ PopupModel {
     // ---------- BRILHO ----------
     Item {
       visible: root.showBrightness
-      width: root.showBoth ? 42 : parent.width
+      width: root.showBoth ? 42 : root.contentWidth
       height: parent.height
 
       Column {
@@ -286,7 +319,7 @@ PopupModel {
     // ---------- VOLUME ----------
     Item {
       visible: root.showVolume
-      width: root.showBoth ? 42 : parent.width
+      width: root.showBoth ? 42 : root.contentWidth
       height: parent.height
 
       Column {

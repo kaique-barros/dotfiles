@@ -8,6 +8,7 @@ import QtQuick.Effects
 import "models"
 import "modules"
 import "dock"
+import "../theme"
 
 PanelWindow {
   id: canva
@@ -26,18 +27,140 @@ PanelWindow {
   property int rightSize: 0
   property int internalRadius: 20
 
+  // ====================================================================
+  //  PALETA: 3 cores base do shell. Troque aqui e tudo acompanha.
+  //  Hover, divisores, texto secundário, trilhos etc. são calculados
+  //  misturando estas cores entre si. (Quer mais cores? Declare cor4, cor5...)
+  // ====================================================================
+  property color cor1: Theme.color("cor1", "#ffffff")                  // hoje: moldura, fundo dos popups e da dock
+  property color cor2: Theme.color("cor2", "#555555")                  // hoje: pílulas e caixas (workspaces, tray, conectividade)
+  property color cor3: Theme.color("cor3", "#000000")                  // hoje: texto e ícones
+
+  // cores de estado (fora da paleta)
+  property color accentColor: Theme.color("accent", "#12b76a")           // ativo / conectado / selecionado / bateria cheia
+  property color dangerColor: Theme.color("danger", "#d92d20")           // erro / bateria baixa / mudo
+  property color warningColor: Qt.hsla((dangerColor.hslHue + 0.11) % 1, dangerColor.hslSaturation, dangerColor.hslLightness)   // bateria média (sai do dangerColor)
+
+  // mistura a com b: t = 0 devolve a, t = 1 devolve b
+  function mix(a, b, t) {
+    return Qt.rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, a.a + (b.a - a.a) * t)
+  }
+
+  // ---------- tamanhos base: o resto deriva destes dois ----------
+  property real fontSize: 12                      // texto base (linhas dos popups, bateria)
+  property real iconSize: 20                      // ícone base (conectividade)
+
   // ================= CONFIGURAÇÕES GLOBAIS UNIFICADAS =================
   property int dockSize: 650
   property int animationTime: 250
   property int dockAnimationTime: animationTime
-  property color frameColor: "white"
-  property url splatterSource: "file://" + Quickshell.shellPath("assets/splatter.png")
+  property color frameColor: cor1
+  property url splatterSource: Theme.asset("splatter.png")
   property real splatterOpacity: 0.2
 
-  property color itemBackgroundColor: "#555555"
+  property color itemBackgroundColor: cor2
   property real itemBackgroundOpacity: 1
   property color itemFillColor: Qt.rgba(itemBackgroundColor.r, itemBackgroundColor.g, itemBackgroundColor.b, itemBackgroundOpacity)
   property real pillThickness: 40
+  // ====================================================================
+
+  // ====================================================================
+  //  TEMA: cores, fontes e tamanhos de todos os itens e popups
+  //  Os módulos leem tudo daqui; só mexa em um módulo para casos especiais.
+  // ====================================================================
+
+  // ---------- fonte e cores globais ----------
+  property string fontFamily: ""                  // "" = fonte padrão do sistema
+  property color iconColor: cor3               // cor padrão dos ícones sobre a barra
+  property color barTextColor: cor3            // cor padrão dos textos sobre a barra
+
+  // ---------- itens da barra ----------
+  // setinha e logo
+  property real archIconSize: leftSize - 17
+  property color archIconColor: iconColor
+  property real dockArrowSize: iconSize - 5
+  property color dockArrowColor: iconColor
+
+  // workspaces
+  property real wsDotSize: 12
+  property real wsDotSpacing: 6
+  property color wsInactiveColor: mix(cor2, cor1, 0.6)
+  property real wsActiveSize: 28
+  property color wsActiveColor: cor3
+  property color wsIconColor: cor1             // ícone da workspace ativa
+  property real wsIconSize: iconSize - 4
+
+  // bandeja (tray)
+  property real trayRadius: 10
+  property int trayColumns: 2
+  property int trayRows: 2
+  property real trayGap: 4
+  property real trayIconSize: iconSize + 6                  // ícones com a bandeja aberta
+  property real traySpacing: 10
+
+  // bateria
+  property color batteryColor: cor3            // ícone entre o amarelo e 100%
+  property color batteryTextColor: barTextColor
+  property int batteryLowThreshold: 20
+  property int batteryMediumThreshold: 40
+  property real batteryIconSize: iconSize - 2
+  property real batterySpacing: 3
+  property real batteryFontSize: fontSize
+  property bool batteryFontBold: true
+
+  // relógio
+  property string clockFontFamily: "JetBrainsMono NF, ExtraBold"
+  property real clockFontSize: 22
+  property bool clockFontBold: true
+  property color clockTextColor: barTextColor
+  property real clockLineSpacing: -12
+  property bool clockShowSeconds: true
+  property real clockSecondsFontSize: 22
+  property bool clockTwelveHour: false
+
+  // conectividade (wifi / bluetooth / energia)
+  property real connIconSize: iconSize
+  property real connIconSpacing: 10
+  property real connHoverScale: 1.3
+  property color connIconColor: iconColor
+
+  // ---------- popups (wifi / bluetooth / energia) ----------
+  property color popupTitleColor: cor3       // título (Wi-Fi, Bluetooth, Energia)
+  property color popupTextColor: cor3        // texto das linhas
+  property color popupMutedColor: mix(cor3, cor1, 0.4)       // texto secundário (sinal, status, avisos)
+  property color toggleOffColor: mix(cor1, cor3, 0.18)        // switch desligado
+  property color toggleKnobColor: cor1         // bolinha do switch
+  property color popupHoverColor: mix(cor1, cor3, 0.08)
+  property color popupDividerColor: mix(cor1, cor3, 0.2)
+  property real popupTitleFontSize: fontSize + 1
+  property real popupRowFontSize: fontSize
+  property real popupSubFontSize: fontSize - 1
+  property real popupRowHeight: 30
+  property real popupHeaderHeight: 28
+  property real popupPadding: 8
+  property int popupMaxRows: 7
+  property real popupHeaderDividerRatio: 0.9      // tamanho do separador do título (relativo ao popup)
+  property real popupItemDividerRatio: 0.8        // tamanho do separador entre itens
+  property real popupDividerThickness: 1.5
+  property real wifiPopupWidth: 230
+  property real btPopupWidth: 230
+  property real powerPopupWidth: 200
+
+  // ---------- volume e brilho (lado direito) ----------
+  property color osdColor: cor3              // cor base do volume/brilho
+  property color osdIconColor: osdColor
+  property color osdTextColor: osdColor           // porcentagem
+  property color osdFillColor: osdColor           // parte preenchida do slider
+  property color osdKnobBorderColor: cor1
+  property color osdTrackColor: mix(cor1, cor3, 0.1)         // trilho do slider
+  property color osdKnobColor: cor3
+  property color osdKnobMutedColor: mix(cor3, cor1, 0.5)
+  property color osdDividerColor: mix(cor1, cor3, 0.4)
+  property real osdFontSize: fontSize - 2
+  property real osdWidthBoth: 110                 // largura com volume e brilho
+  property real osdWidthSingle: 52                // largura com um só
+  property real osdHeight: 210
+  property real osdPadding: 6
   // ====================================================================
   
   WlrLayershell.exclusionMode: ExclusionMode.Ignore
@@ -72,13 +195,9 @@ PanelWindow {
         Icon {
           id: popupIcon
           anchors.centerIn: parent
-          source: "file://" + Quickshell.shellPath(
-            barDrawer.dockActive 
-              ? "assets/dock_arrow_close.svg" 
-              : "assets/dock_arrow_open.svg"
-          )
-          color: "black"
-          size: 15
+          source: Theme.asset(barDrawer.dockActive ? "dock_arrow_close.svg" : "dock_arrow_open.svg")
+          color: canva.dockArrowColor
+          size: canva.dockArrowSize
         }
       }
 
@@ -183,9 +302,9 @@ PanelWindow {
 
     Icon {
       anchors.centerIn: parent
-      source: "file://" + Quickshell.shellPath("assets/arch-linux.svg")
-      color: "black"
-      size: canva.leftSize - 17
+      source: Theme.asset("arch-linux.svg")
+      color: canva.archIconColor
+      size: canva.archIconSize
     }
   }
 

@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Bluetooth
 import Quickshell.Services.UPower
 
+import "../../theme"
 import "../models"
 
 // Pílula com Wi-Fi, Bluetooth e perfil de energia.
@@ -14,10 +15,10 @@ BarItemModel {
   // ================= CONFIGURAÇÕES =================
   property real pillThickness: bar ? bar.pillThickness : 40
   property real endPadding: 10                 // folga nas pontas, ao longo da barra
-  property real iconSize: 20
-  property real iconSpacing: 10                // espaço entre os ícones
-  property real hoverScale: 1.3                // quanto o ícone cresce no hover
-  property color iconColor: "black"
+  property real iconSize: bar ? bar.connIconSize : 20
+  property real iconSpacing: bar ? bar.connIconSpacing : 10                // espaço entre os ícones
+  property real hoverScale: bar ? bar.connHoverScale : 1.3                // quanto o ícone cresce no hover
+  property color iconColor: bar ? bar.connIconColor : "black"
   property int scaleDuration: 120
   property int closeDelay: 200                 // espera antes de fechar o popup
 
@@ -164,7 +165,7 @@ BarItemModel {
             anchors.centerIn: parent
             size: root.iconSize
             color: root.iconColor
-            source: "file://" + Quickshell.shellPath("assets/" + root.icons[cell.index])
+            source: Theme.asset(root.icons[cell.index])
           }
         }
       }

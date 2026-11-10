@@ -8,19 +8,25 @@ PopupModel {
   id: root
 
   // ================= CONFIGURAÇÕES =================
-  property int maxRows: 7
-  property real rowHeight: 30
-  property real headerHeight: 28
-  property color hoverColor: "#e8ebf0"
-  property color textColor: "#1d2939"
-  property color mutedColor: "#667085"
-  property color activeColor: "#12b76a"
+  property int maxRows: bar ? bar.popupMaxRows : 7
+  property real rowHeight: bar ? bar.popupRowHeight : 30
+  property real headerHeight: bar ? bar.popupHeaderHeight : 28
+  property color hoverColor: bar ? bar.popupHoverColor : "#e8ebf0"
+  property color titleColor: bar ? bar.popupTitleColor : "#1d2939"
+  property color textColor: bar ? bar.popupTextColor : "#1d2939"
+  property color mutedColor: bar ? bar.popupMutedColor : "#667085"
+  property color activeColor: bar ? bar.accentColor : "#12b76a"
 
   // Separadores
-  property real headerDividerRatio: 0.9
-  property real itemDividerRatio: 0.8
-  property real dividerThickness: 1.5
-  property color dividerColor: "#c7cdd6"
+  property real headerDividerRatio: bar ? bar.popupHeaderDividerRatio : 0.9
+  property real itemDividerRatio: bar ? bar.popupItemDividerRatio : 0.8
+  property real dividerThickness: bar ? bar.popupDividerThickness : 1.5
+  property color dividerColor: bar ? bar.popupDividerColor : "#c7cdd6"
+  property string fontFamily: bar ? bar.fontFamily : ""
+  readonly property string family: fontFamily !== "" ? fontFamily : Qt.application.font.family
+  property real titleFontSize: bar ? bar.popupTitleFontSize : 13
+  property real rowFontSize: bar ? bar.popupRowFontSize : 12
+  property real subFontSize: bar ? bar.popupSubFontSize : 11
   // =================================================
 
   property bool wifiOn: true
@@ -28,8 +34,8 @@ PopupModel {
   readonly property int shownRows: Math.min(maxRows, networks.length)
 
   edge: "left"
-  padding: 8
-  popupWidth: 230
+  padding: bar ? bar.popupPadding : 8
+  popupWidth: bar ? bar.wifiPopupWidth : 230
   popupHeight: 2 * padding + headerHeight + 13 + Math.max(1, shownRows) * rowHeight
 
   function refresh() {
@@ -96,11 +102,15 @@ PopupModel {
         anchors.verticalCenter: parent.verticalCenter
         text: "Wi-Fi"
         font.bold: true
-        font.pixelSize: 13
-        color: root.textColor
+        font.family: root.family
+        font.pixelSize: root.titleFontSize
+        color: root.titleColor
       }
 
       ToggleSwitch {
+        onColor: root.activeColor
+        offColor: bar ? bar.toggleOffColor : "#d0d5dd"
+        knobColor: bar ? bar.toggleKnobColor : "white"
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         checked: root.wifiOn
@@ -122,7 +132,8 @@ PopupModel {
       height: root.rowHeight
       verticalAlignment: Text.AlignVCenter
       text: root.wifiOn ? "Nenhuma rede encontrada" : "Wi-Fi desligado"
-      font.pixelSize: 11
+      font.family: root.family
+      font.pixelSize: root.subFontSize
       font.italic: true
       color: root.mutedColor
     }
@@ -158,7 +169,8 @@ PopupModel {
           anchors.rightMargin: 6
           anchors.verticalCenter: parent.verticalCenter
           text: row.modelData.ssid
-          font.pixelSize: 12
+          font.family: root.family
+          font.pixelSize: root.rowFontSize
           font.bold: row.modelData.active
           color: root.textColor
           elide: Text.ElideRight
@@ -170,7 +182,8 @@ PopupModel {
           anchors.rightMargin: 8
           anchors.verticalCenter: parent.verticalCenter
           text: row.modelData.signal + "%"
-          font.pixelSize: 11
+          font.family: root.family
+          font.pixelSize: root.subFontSize
           color: root.mutedColor
         }
 

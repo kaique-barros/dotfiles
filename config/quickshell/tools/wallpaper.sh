@@ -46,7 +46,8 @@ launch() {
     # shellcheck disable=SC2206
     args+=(--screen-root "$m" --bg "$id" $BG_ARGS)
   done
-  setsid -f "$LWE" "${args[@]}" >/dev/null 2>&1
+  # 9>&-: o engine NÃO pode herdar o fd do lock, senão ele segura o lock enquanto estiver vivo
+  setsid -f "$LWE" "${args[@]}" >/dev/null 2>&1 9>&-
 }
 
 switch_to() {
@@ -69,7 +70,7 @@ case "$cmd" in
     id="$(current_id)"
     [ -n "$id" ] || { echo "sem tema salvo e sem DEFAULT_ID em $CONF" >&2; exit 1; }
     command -v "$LWE" >/dev/null || { echo "não achei o $LWE no PATH" >&2; exit 1; }
-    exec 9>"$LOCK"; flock 9
+    exec 9>"$LOCK"; flock -w 10 9 || echo "lock ocupado, seguindo sem ele" >&2
     switch_to "$id"
     ;;
   set)
@@ -78,7 +79,7 @@ case "$cmd" in
     mkdir -p "$STATE_DIR"
     printf '%s\n' "$id" > "$STATE_FILE"
     command -v "$LWE" >/dev/null || { echo "não achei o $LWE no PATH" >&2; exit 1; }
-    exec 9>"$LOCK"; flock 9
+    exec 9>"$LOCK"; flock -w 10 9 || echo "lock ocupado, seguindo sem ele" >&2
     # se chegou uma troca mais nova enquanto esperava o lock, ela cuida do resto
     [ "$(current_id)" = "$id" ] || exit 0
     switch_to "$id"

@@ -34,7 +34,7 @@ PanelWindow {
   property url splatterSource: "file://" + Quickshell.shellPath("assets/splatter.png")
   property real splatterOpacity: 0.2
 
-  property color itemBackgroundColor: "gray"
+  property color itemBackgroundColor: "#555555"
   property real itemBackgroundOpacity: 1
   property color itemFillColor: Qt.rgba(itemBackgroundColor.r, itemBackgroundColor.g, itemBackgroundColor.b, itemBackgroundOpacity)
   property real pillThickness: 40

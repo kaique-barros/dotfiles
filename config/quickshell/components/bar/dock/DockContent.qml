@@ -191,21 +191,51 @@ Item {
           clip: true
           visible: pageView.currentPage === 0 || slide.running
 
-          // Seção de Controle de Volume por App no canto superior direito
-          AppVolumeSection {
-            id: appVolumeWidget
-            anchors.top: parent.top
-            anchors.topMargin: 10
-            anchors.right: parent.right
-            anchors.rightMargin: 10
-          }
+          BoxGrid {
+            id: boxGrid
+            anchors.fill: parent
 
-          // Título sutil da página 1 (multimedia)
-          Column {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.topMargin: 14
-            spacing: 2
+            columns: 6
+            rows: 11
+            spacing: 10
+            showGrid: false                // mostra a grade para você se organizar; depois ponha false
+
+            boxColor: canva.itemFillColor  // a mesma cor das workspaces
+            boxRadius: 16
+
+            MediaBox {
+              col: 0
+              row: 0
+              colSpan: 3                   // largura: quantas colunas ocupa
+              rowSpan: 4                   // altura: quantas linhas ocupa
+            }
+
+            RandomImageBox {
+              col: 3
+              row: 2
+              colSpan: 3
+              rowSpan: 3
+              directories: ["~/Downloads/cassie_pack/"]
+              active: barDrawer.dockActive
+            }
+
+            SessionBox {
+              col: 3
+              row: 0
+              colSpan: 3
+              rowSpan: 2
+              avatarFile: "icon.png"      // o arquivo que você colocar em assets/
+            }
+
+            CalendarBox {
+              col: 0
+              row: 7
+              colSpan: 6
+              rowSpan: 4
+              directory: "~/Obsidian Vault/Calendar"
+              active: barDrawer.dockActive
+            }
+
           }
         }
 

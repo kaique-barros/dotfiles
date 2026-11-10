@@ -13,6 +13,7 @@ Item {
 
   required property var canva
   required property var barDrawer
+  readonly property bool homeKeysActive: barDrawer.dockActive && pageView.currentPage === 0
 
   // Largura e altura da dock
   width: canva.dockSize
@@ -228,12 +229,12 @@ Item {
             }
 
             CalendarBox {
-              col: 0
-              row: 7
-              colSpan: 6
-              rowSpan: 4
+              id: calendarBox
+              col: 0; row: 7; colSpan: 6; rowSpan: 4
               directory: "~/Obsidian Vault/Calendar"
+              tasksFile: "~/Obsidian Vault/Tarefas.md"
               active: barDrawer.dockActive
+              keysEnabled: barDrawer.dockActive && pageView.currentPage === 0
             }
 
           }

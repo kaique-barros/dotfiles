@@ -27,15 +27,18 @@ PanelWindow {
   property int internalRadius: 20
 
   // ====================================================================
-  //  PALETA: as ÚNICAS 5 cores do shell. Troque aqui e tudo acompanha.
-  //  Todo o resto (hover, divisores, texto secundário, trilhos, etc.)
-  //  é calculado a partir delas, misturando-as entre si.
+  //  PALETA: 3 cores base do shell. Troque aqui e tudo acompanha.
+  //  Hover, divisores, texto secundário, trilhos etc. são calculados
+  //  misturando estas cores entre si. (Quer mais cores? Declare cor4, cor5...)
   // ====================================================================
-  property color colorBackground: "#ffffff"       // moldura da tela, fundo dos popups e da dock
-  property color colorSurface: "#555555"          // pílulas e caixas sobre a moldura (workspaces, tray, conectividade)
-  property color colorText: "#000000"             // texto e ícones
-  property color colorAccent: "#12b76a"           // ativo / conectado / selecionado / bateria cheia
-  property color colorDanger: "#d92d20"           // erro / bateria baixa / mudo (o amarelo da bateria sai dele)
+  property color cor1: "#ffffff"                  // hoje: moldura, fundo dos popups e da dock
+  property color cor2: "#555555"                  // hoje: pílulas e caixas (workspaces, tray, conectividade)
+  property color cor3: "#000000"                  // hoje: texto e ícones
+
+  // cores de estado (fora da paleta)
+  property color accentColor: "#12b76a"           // ativo / conectado / selecionado / bateria cheia
+  property color dangerColor: "#d92d20"           // erro / bateria baixa / mudo
+  property color warningColor: Qt.hsla((dangerColor.hslHue + 0.11) % 1, dangerColor.hslSaturation, dangerColor.hslLightness)   // bateria média (sai do dangerColor)
 
   // mistura a com b: t = 0 devolve a, t = 1 devolve b
   function mix(a, b, t) {
@@ -50,11 +53,11 @@ PanelWindow {
   property int dockSize: 650
   property int animationTime: 250
   property int dockAnimationTime: animationTime
-  property color frameColor: colorBackground
+  property color frameColor: cor1
   property url splatterSource: "file://" + Quickshell.shellPath("assets/splatter.png")
   property real splatterOpacity: 0.2
 
-  property color itemBackgroundColor: colorSurface
+  property color itemBackgroundColor: cor2
   property real itemBackgroundOpacity: 1
   property color itemFillColor: Qt.rgba(itemBackgroundColor.r, itemBackgroundColor.g, itemBackgroundColor.b, itemBackgroundOpacity)
   property real pillThickness: 40
@@ -67,11 +70,8 @@ PanelWindow {
 
   // ---------- fonte e cores globais ----------
   property string fontFamily: ""                  // "" = fonte padrão do sistema
-  property color iconColor: colorText               // cor padrão dos ícones sobre a barra
-  property color barTextColor: colorText            // cor padrão dos textos sobre a barra
-  property color accentColor: colorAccent           // conectado / ativo / selecionado / bateria cheia
-  property color warningColor: Qt.hsla((colorDanger.hslHue + 0.11) % 1, colorDanger.hslSaturation, colorDanger.hslLightness)          // bateria média
-  property color dangerColor: colorDanger           // bateria baixa / volume mudo
+  property color iconColor: cor3               // cor padrão dos ícones sobre a barra
+  property color barTextColor: cor3            // cor padrão dos textos sobre a barra
 
   // ---------- itens da barra ----------
   // setinha e logo
@@ -83,10 +83,10 @@ PanelWindow {
   // workspaces
   property real wsDotSize: 12
   property real wsDotSpacing: 6
-  property color wsInactiveColor: mix(colorSurface, colorBackground, 0.6)
+  property color wsInactiveColor: mix(cor2, cor1, 0.6)
   property real wsActiveSize: 28
-  property color wsActiveColor: colorText
-  property color wsIconColor: colorBackground             // ícone da workspace ativa
+  property color wsActiveColor: cor3
+  property color wsIconColor: cor1             // ícone da workspace ativa
   property real wsIconSize: iconSize - 4
 
   // bandeja (tray)
@@ -98,7 +98,7 @@ PanelWindow {
   property real traySpacing: 10
 
   // bateria
-  property color batteryColor: colorText            // ícone entre o amarelo e 100%
+  property color batteryColor: cor3            // ícone entre o amarelo e 100%
   property color batteryTextColor: barTextColor
   property int batteryLowThreshold: 20
   property int batteryMediumThreshold: 40
@@ -124,13 +124,13 @@ PanelWindow {
   property color connIconColor: iconColor
 
   // ---------- popups (wifi / bluetooth / energia) ----------
-  property color popupTitleColor: colorText       // título (Wi-Fi, Bluetooth, Energia)
-  property color popupTextColor: colorText        // texto das linhas
-  property color popupMutedColor: mix(colorText, colorBackground, 0.4)       // texto secundário (sinal, status, avisos)
-  property color toggleOffColor: mix(colorBackground, colorText, 0.18)        // switch desligado
-  property color toggleKnobColor: colorBackground         // bolinha do switch
-  property color popupHoverColor: mix(colorBackground, colorText, 0.08)
-  property color popupDividerColor: mix(colorBackground, colorText, 0.2)
+  property color popupTitleColor: cor3       // título (Wi-Fi, Bluetooth, Energia)
+  property color popupTextColor: cor3        // texto das linhas
+  property color popupMutedColor: mix(cor3, cor1, 0.4)       // texto secundário (sinal, status, avisos)
+  property color toggleOffColor: mix(cor1, cor3, 0.18)        // switch desligado
+  property color toggleKnobColor: cor1         // bolinha do switch
+  property color popupHoverColor: mix(cor1, cor3, 0.08)
+  property color popupDividerColor: mix(cor1, cor3, 0.2)
   property real popupTitleFontSize: fontSize + 1
   property real popupRowFontSize: fontSize
   property real popupSubFontSize: fontSize - 1
@@ -146,15 +146,15 @@ PanelWindow {
   property real powerPopupWidth: 200
 
   // ---------- volume e brilho (lado direito) ----------
-  property color osdColor: colorText              // cor base do volume/brilho
+  property color osdColor: cor3              // cor base do volume/brilho
   property color osdIconColor: osdColor
   property color osdTextColor: osdColor           // porcentagem
   property color osdFillColor: osdColor           // parte preenchida do slider
-  property color osdKnobBorderColor: colorBackground
-  property color osdTrackColor: mix(colorBackground, colorText, 0.1)         // trilho do slider
-  property color osdKnobColor: colorText
-  property color osdKnobMutedColor: mix(colorText, colorBackground, 0.5)
-  property color osdDividerColor: mix(colorBackground, colorText, 0.4)
+  property color osdKnobBorderColor: cor1
+  property color osdTrackColor: mix(cor1, cor3, 0.1)         // trilho do slider
+  property color osdKnobColor: cor3
+  property color osdKnobMutedColor: mix(cor3, cor1, 0.5)
+  property color osdDividerColor: mix(cor1, cor3, 0.4)
   property real osdFontSize: fontSize - 2
   property real osdWidthBoth: 110                 // largura com volume e brilho
   property real osdWidthSingle: 52                // largura com um só

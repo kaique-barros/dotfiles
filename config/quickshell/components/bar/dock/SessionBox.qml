@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Widgets
 
+import "../../theme"
 import "../models"
 
 // Widget de sessão: avatar redondo + usuário, distro, window manager e tempo de sessão.
@@ -50,7 +51,7 @@ Box {
   readonly property bool side: layoutMode === "side"
 
   function asset(name) {
-    return "file://" + Quickshell.shellPath("assets/" + name)
+    return Theme.asset(name)
   }
 
   function toUrl(path) {

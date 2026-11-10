@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Hyprland
 
+import "../../theme"
 import "../models"
 
 // Bolinhas das workspaces: as que existem (têm janelas) + a atual.
@@ -34,7 +35,7 @@ BarItemModel {
   // --- workspace ativa ---
   property real activeSize: bar ? bar.wsActiveSize : 28                 // limitado à largura da pílula
   property color activeColor: bar ? bar.wsActiveColor : "black"
-  property string iconPath: "/home/kaiqbbrs/rice/config/quickshell/assets/fire.svg"
+  property string iconPath: ""                 // vazio = fire.svg do tema (ou o padrão); ou um caminho absoluto
   property color iconColor: bar ? bar.wsIconColor : "white"
   property real iconSize: bar ? bar.wsIconSize : 16
   property int sizeAnimation: 150
@@ -103,7 +104,7 @@ BarItemModel {
 
           Icon {
             anchors.centerIn: parent
-            source: "file://" + root.iconPath
+            source: root.iconPath !== "" ? "file://" + root.iconPath : Theme.asset("fire.svg")
             color: root.iconColor
             size: Math.min(root.iconSize, dot.width - 4)
             opacity: cell.current ? 1 : 0

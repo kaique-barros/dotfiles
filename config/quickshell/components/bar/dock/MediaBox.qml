@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Mpris
 
+import "../../theme"
 import "../models"
 
 // Widget de mídia: capa, título, artista, tempo, barra de progresso e botões.
@@ -76,7 +77,7 @@ Box {
     return first
   }
 
-  function asset(name) { return "file://" + Quickshell.shellPath("assets/" + name) }
+  function asset(name) { return Theme.asset(name) }
 
   function fmt(sec) {
     const s = Math.max(0, Math.floor(sec || 0))

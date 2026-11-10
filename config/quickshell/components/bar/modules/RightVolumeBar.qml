@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
 
+import "../../theme"
 import "../models"
 
 // Controle de volume conectado à borda direita, como um popup da moldura.
@@ -86,17 +87,17 @@ PopupModel {
       anchors.horizontalCenter: parent.horizontalCenter
 
       readonly property string iconAsset: {
-        if (root.isMuted) return "assets/volume_muted.svg"
-        if (root.currentVol <= 0.001) return "assets/volume_zero.svg"
-        if (root.currentVol < 0.50) return "assets/volume_low.svg"
-        return "assets/volume_high.svg"
+        if (root.isMuted) return "volume_muted.svg"
+        if (root.currentVol <= 0.001) return "volume_zero.svg"
+        if (root.currentVol < 0.50) return "volume_low.svg"
+        return "volume_high.svg"
       }
 
       Icon {
         anchors.centerIn: parent
         size: 20
         color: root.isMuted ? "#d32f2f" : "#1e1e2e"
-        source: "file://" + Quickshell.shellPath(parent.iconAsset)
+        source: Theme.asset(parent.iconAsset)
       }
 
       MouseArea {

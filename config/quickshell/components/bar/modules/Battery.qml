@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.UPower
 
+import "../../theme"
 import "../models"
 
 // Ícone de bateria + porcentagem, lado a lado. Só o ícone muda de cor.
@@ -59,8 +60,7 @@ BarItemModel {
       anchors.verticalCenter: parent.verticalCenter
       size: root.iconSize
       color: root.iconColor
-      source: "file://" + Quickshell.shellPath(
-        "assets/" + (root.charging ? root.chargingIconFile : root.iconFile))
+      source: Theme.asset(root.charging ? root.chargingIconFile : root.iconFile)
     }
 
     Text {

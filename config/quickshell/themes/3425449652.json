@@ -1,0 +1,23 @@
+{
+  "id": "3425449652",
+  "name": "【4K】「Wuthering Waves  今汐桃夭灼灼」——Ziyv梓雨【鸣潮】Wuthering Waves",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3425449652.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#f7e6df",
+    "cor2": "#b43020",
+    "cor3": "#1b0b05",
+    "accent": "#da6875",
+    "danger": ""
+  },
+  "quantized": [
+    "#3c190c",
+    "#6f3225",
+    "#b43020",
+    "#af593f",
+    "#9d675c",
+    "#da6875",
+    "#e3a68c",
+    "#f4dbd1"
+  ]
+}

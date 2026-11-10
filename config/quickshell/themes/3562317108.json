@@ -1,0 +1,23 @@
+{
+  "id": "3562317108",
+  "name": "20-83-07",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3562317108.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#aeaeae",
+    "cor2": "#0d0d0d",
+    "cor3": "#000000",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#000000",
+    "#000000",
+    "#010101",
+    "#050505",
+    "#090909",
+    "#0d0d0d",
+    "#1a1a1a",
+    "#8b8b8b"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "3152793212",
+  "name": "Dark Magic",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3152793212.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#000000",
+    "cor2": "#696969",
+    "cor3": "#a2a1a1",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#010101",
+    "#020202",
+    "#020202",
+    "#161515"
+  ]
+}

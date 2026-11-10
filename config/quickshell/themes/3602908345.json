@@ -1,0 +1,23 @@
+{
+  "id": "3602908345",
+  "name": "【Lord of The Mysteries | 诡秘之主】Audrey Hall",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3602908345.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#cfcfcf",
+    "cor2": "#494949",
+    "cor3": "#000000",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#bbbbbb",
+    "#bbbbbb",
+    "#bbbbbb",
+    "#bbbbbb",
+    "#bbbbbb",
+    "#bbbbbb",
+    "#bbbbbb",
+    "#bbbbbb"
+  ]
+}

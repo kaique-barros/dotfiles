@@ -1,0 +1,23 @@
+{
+  "id": "3805830934",
+  "name": "Weaver's Mask / Shadow slave",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3805830934.jpg",
+  "assets": "",
+  "colors": {
+    "cor1": "#000000",
+    "cor2": "#494949",
+    "cor3": "#b6b6b6",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#010101",
+    "#080808",
+    "#1d1d1d",
+    "#494949"
+  ]
+}

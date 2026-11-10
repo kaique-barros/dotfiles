@@ -1,0 +1,23 @@
+{
+  "id": "3365118491",
+  "name": "Snake Retro Girl",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3365118491.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#c8c3c9",
+    "cor2": "#b49296",
+    "cor3": "#282429",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#584f5c",
+    "#9299a3",
+    "#98a2ab",
+    "#9ba2ac",
+    "#b49296",
+    "#9ea4ad",
+    "#9ea5ae",
+    "#b0a9b2"
+  ]
+}

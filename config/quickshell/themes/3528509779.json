@@ -1,0 +1,23 @@
+{
+  "id": "3528509779",
+  "name": "冰华刃舞",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3528509779.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#e6f2f9",
+    "cor2": "#6e82ae",
+    "cor3": "#0d0e15",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#1c202f",
+    "#2a3249",
+    "#35415b",
+    "#3e4f72",
+    "#576584",
+    "#6e82ae",
+    "#9ab9de",
+    "#dcecf7"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "3424946406",
+  "name": "Phoebe 菲比",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3424946406.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#cdcdcd",
+    "cor2": "#484848",
+    "cor3": "#000000",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#b7b7b7",
+    "#b7b7b7",
+    "#b7b7b7",
+    "#b7b7b7",
+    "#b7b7b7",
+    "#b7b7b7",
+    "#b7b7b7",
+    "#b7b7b7"
+  ]
+}

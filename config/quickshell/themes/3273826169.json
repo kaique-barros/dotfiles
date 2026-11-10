@@ -1,0 +1,23 @@
+{
+  "id": "3273826169",
+  "name": "Shadow Slave - Mongrel",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3273826169.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#cacaca",
+    "cor2": "#252525",
+    "cor3": "#020202",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#040404",
+    "#252525",
+    "#4d4d4d",
+    "#606060",
+    "#6b6b6b",
+    "#7b7b7b",
+    "#8a8a8a",
+    "#b3b3b3"
+  ]
+}

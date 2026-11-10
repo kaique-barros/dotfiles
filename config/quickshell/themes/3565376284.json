@@ -1,0 +1,23 @@
+{
+  "id": "3565376284",
+  "name": "Crown of the Void",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3565376284.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#f0f1f2",
+    "cor2": "#595959",
+    "cor3": "#020202",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#050505",
+    "#595959",
+    "#eaebed",
+    "#eaedec",
+    "#edebeb",
+    "#edebed",
+    "#ededeb",
+    "#ededee"
+  ]
+}

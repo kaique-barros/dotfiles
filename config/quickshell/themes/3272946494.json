@@ -1,0 +1,23 @@
+{
+  "id": "3272946494",
+  "name": "沂水弦歌-Genshin 雷电影（喜欢的话记得给个五星/点赞哦~(灬º‿º灬)♡）",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3272946494.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#ebf1fa",
+    "cor2": "#53679d",
+    "cor3": "#181424",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#352c4f",
+    "#53679d",
+    "#83738b",
+    "#99a6bf",
+    "#8bb8de",
+    "#bed1e7",
+    "#dce3f0",
+    "#e2ebf8"
+  ]
+}

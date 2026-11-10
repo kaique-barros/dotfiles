@@ -4,6 +4,7 @@ import Quickshell.Io
 import Quickshell.Bluetooth
 import Quickshell.Services.UPower
 
+import "../../theme"
 import "../models"
 
 // Pílula com Wi-Fi, Bluetooth e perfil de energia.
@@ -164,7 +165,7 @@ BarItemModel {
             anchors.centerIn: parent
             size: root.iconSize
             color: root.iconColor
-            source: "file://" + Quickshell.shellPath("assets/" + root.icons[cell.index])
+            source: Theme.asset(root.icons[cell.index])
           }
         }
       }

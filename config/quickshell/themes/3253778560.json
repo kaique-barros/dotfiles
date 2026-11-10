@@ -1,0 +1,23 @@
+{
+  "id": "3253778560",
+  "name": "Elden Ring - Lady",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3253778560.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#f2ece6",
+    "cor2": "#7d7167",
+    "cor3": "#050604",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#0c0d0a",
+    "#23211c",
+    "#393630",
+    "#514f49",
+    "#7d7167",
+    "#afa297",
+    "#d5c8bf",
+    "#ede4dc"
+  ]
+}

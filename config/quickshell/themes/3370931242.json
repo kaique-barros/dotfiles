@@ -1,0 +1,23 @@
+{
+  "id": "3370931242",
+  "name": "forgotten shore (Shadow Slave)",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3370931242.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#edefee",
+    "cor2": "#6e8a9d",
+    "cor3": "#28262b",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#585460",
+    "#6e8a9d",
+    "#93666d",
+    "#8c9dac",
+    "#a9b6ba",
+    "#b2c4d0",
+    "#d1d5d1",
+    "#e5e8e6"
+  ]
+}

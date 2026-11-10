@@ -1,0 +1,23 @@
+{
+  "id": "3355419735",
+  "name": "PRSK/Proseka [プロセカ/프로세카] - Shadow Shadow",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3355419735.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#acabc4",
+    "cor2": "#594d7c",
+    "cor3": "#000000",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#4a4b73",
+    "#51527b",
+    "#51527b",
+    "#594d7c",
+    "#51527b",
+    "#51527c",
+    "#51527b",
+    "#8887ab"
+  ]
+}

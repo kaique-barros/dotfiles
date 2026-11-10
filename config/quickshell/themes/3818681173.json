@@ -1,0 +1,23 @@
+{
+  "id": "3818681173",
+  "name": "Beyond Sight: Whispers of Fate",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3818681173.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#ceaaba",
+    "cor2": "#0e0bcc",
+    "cor3": "#000000",
+    "accent": "#54269a",
+    "danger": ""
+  },
+  "quantized": [
+    "#000000",
+    "#0e0314",
+    "#120b7c",
+    "#0e0bcc",
+    "#3d1337",
+    "#7a2e4d",
+    "#54269a",
+    "#b9859d"
+  ]
+}

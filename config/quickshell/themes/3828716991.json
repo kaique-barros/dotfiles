@@ -1,0 +1,23 @@
+{
+  "id": "3828716991",
+  "name": "nephis-shadow-slave-enhanced",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3828716991.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#fefefe",
+    "cor2": "#2a211c",
+    "cor3": "#050404",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#0b080a",
+    "#2a211c",
+    "#4b4445",
+    "#90938f",
+    "#d3cfc5",
+    "#e8eef0",
+    "#f4f9fc",
+    "#fefdfe"
+  ]
+}

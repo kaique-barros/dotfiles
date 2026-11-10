@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Pipewire
 
+import "../../theme"
 import "../models"
 
 Item {
@@ -347,8 +348,7 @@ Item {
                 anchors.centerIn: parent
                 size: 15
                 color: appItem.appMuted ? "#d92d20" : "#344054"
-                source: "file://" + Quickshell.shellPath(
-                  "assets/" + root.volumeIconName(appItem.appMuted, appItem.appVol) + ".svg")
+                source: Theme.asset(root.volumeIconName(appItem.appMuted, appItem.appVol) + ".svg")
               }
 
               MouseArea {

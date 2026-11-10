@@ -1,0 +1,23 @@
+{
+  "id": "3365103280",
+  "name": "Retro Girl",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3365103280.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#d6cbd4",
+    "cor2": "#b57e9f",
+    "cor3": "#161425",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#302d53",
+    "#302d54",
+    "#352951",
+    "#503056",
+    "#4c3859",
+    "#6f5a84",
+    "#b57e9f",
+    "#c5b5c2"
+  ]
+}

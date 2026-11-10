@@ -1,0 +1,23 @@
+{
+  "id": "3807936456",
+  "name": "Lost From Light - Born in Darkness",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3807936456.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#c9c9c9",
+    "cor2": "#464646",
+    "cor3": "#000000",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#b2b2b2",
+    "#b2b2b2",
+    "#b2b2b2",
+    "#b2b2b2",
+    "#b2b2b2",
+    "#b2b2b2",
+    "#b2b2b2",
+    "#b2b2b2"
+  ]
+}

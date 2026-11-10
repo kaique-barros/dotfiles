@@ -1,0 +1,23 @@
+{
+  "id": "3478544779",
+  "name": "鸣潮-卡提希亚",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3478544779.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#fefefe",
+    "cor2": "#d2b1ad",
+    "cor3": "#2c3539",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#61767f",
+    "#9f8e8a",
+    "#8a9fa9",
+    "#aeb4b4",
+    "#d2b1ad",
+    "#dcd9c6",
+    "#ecede8",
+    "#fefefd"
+  ]
+}

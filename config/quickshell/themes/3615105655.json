@@ -1,0 +1,23 @@
+{
+  "id": "3615105655",
+  "name": "电锯人 蕾塞丨 Chainsaw Man Reze",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3615105655.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#e6cab6",
+    "cor2": "#c15337",
+    "cor3": "#060a08",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#0d1711",
+    "#0e1b14",
+    "#151b15",
+    "#58171c",
+    "#47342f",
+    "#c15337",
+    "#ac6b65",
+    "#dcb497"
+  ]
+}

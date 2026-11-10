@@ -1,0 +1,23 @@
+{
+  "id": "3494616159",
+  "name": "雷电将军",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3494616159.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#f0f0f5",
+    "cor2": "#484d7e",
+    "cor3": "#0f0f1b",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#21223c",
+    "#434053",
+    "#484d7e",
+    "#606891",
+    "#7a718a",
+    "#98919d",
+    "#a5a4c8",
+    "#eaeaf1"
+  ]
+}

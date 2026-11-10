@@ -1,0 +1,23 @@
+{
+  "id": "3460813463",
+  "name": "Jinx",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3460813463.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#09080a",
+    "cor2": "#2d3549",
+    "cor3": "#c5c9d4",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#0b0a0c",
+    "#110f11",
+    "#161317",
+    "#17181e",
+    "#1d1d22",
+    "#24262e",
+    "#2d3549",
+    "#6e7993"
+  ]
+}

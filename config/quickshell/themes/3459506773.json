@@ -1,0 +1,23 @@
+{
+  "id": "3459506773",
+  "name": "Dark Queen [4K]",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3459506773.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#000000",
+    "cor2": "#6a6c6e",
+    "cor3": "#a3a6a9",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000101",
+    "#182029"
+  ]
+}

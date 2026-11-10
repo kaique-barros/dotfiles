@@ -8,6 +8,7 @@ import QtQuick.Effects
 import "models"
 import "modules"
 import "dock"
+import "../theme"
 
 PanelWindow {
   id: canva
@@ -31,13 +32,13 @@ PanelWindow {
   //  Hover, divisores, texto secundário, trilhos etc. são calculados
   //  misturando estas cores entre si. (Quer mais cores? Declare cor4, cor5...)
   // ====================================================================
-  property color cor1: "#ffffff"                  // hoje: moldura, fundo dos popups e da dock
-  property color cor2: "#555555"                  // hoje: pílulas e caixas (workspaces, tray, conectividade)
-  property color cor3: "#000000"                  // hoje: texto e ícones
+  property color cor1: Theme.color("cor1", "#ffffff")                  // hoje: moldura, fundo dos popups e da dock
+  property color cor2: Theme.color("cor2", "#555555")                  // hoje: pílulas e caixas (workspaces, tray, conectividade)
+  property color cor3: Theme.color("cor3", "#000000")                  // hoje: texto e ícones
 
   // cores de estado (fora da paleta)
-  property color accentColor: "#12b76a"           // ativo / conectado / selecionado / bateria cheia
-  property color dangerColor: "#d92d20"           // erro / bateria baixa / mudo
+  property color accentColor: Theme.color("accent", "#12b76a")           // ativo / conectado / selecionado / bateria cheia
+  property color dangerColor: Theme.color("danger", "#d92d20")           // erro / bateria baixa / mudo
   property color warningColor: Qt.hsla((dangerColor.hslHue + 0.11) % 1, dangerColor.hslSaturation, dangerColor.hslLightness)   // bateria média (sai do dangerColor)
 
   // mistura a com b: t = 0 devolve a, t = 1 devolve b
@@ -54,7 +55,7 @@ PanelWindow {
   property int animationTime: 250
   property int dockAnimationTime: animationTime
   property color frameColor: cor1
-  property url splatterSource: "file://" + Quickshell.shellPath("assets/splatter.png")
+  property url splatterSource: Theme.asset("splatter.png")
   property real splatterOpacity: 0.2
 
   property color itemBackgroundColor: cor2
@@ -194,11 +195,7 @@ PanelWindow {
         Icon {
           id: popupIcon
           anchors.centerIn: parent
-          source: "file://" + Quickshell.shellPath(
-            barDrawer.dockActive 
-              ? "assets/dock_arrow_close.svg" 
-              : "assets/dock_arrow_open.svg"
-          )
+          source: Theme.asset(barDrawer.dockActive ? "dock_arrow_close.svg" : "dock_arrow_open.svg")
           color: canva.dockArrowColor
           size: canva.dockArrowSize
         }
@@ -305,7 +302,7 @@ PanelWindow {
 
     Icon {
       anchors.centerIn: parent
-      source: "file://" + Quickshell.shellPath("assets/arch-linux.svg")
+      source: Theme.asset("arch-linux.svg")
       color: canva.archIconColor
       size: canva.archIconSize
     }
@@ -368,6 +365,7 @@ PanelWindow {
                   tray.pos + tray.length - 8)
     offset: barDrawer.dockSize
     animationTime: canva.animationTime
+    iconColor: cor1 
     popupList: [wifiPopup, btPopup, powerPopup]
   }
 

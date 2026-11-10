@@ -1,0 +1,23 @@
+{
+  "id": "3561052788",
+  "name": "Neuro_&_Evil_Never_MV_Animation_№2",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3561052788.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#b4bcd8",
+    "cor2": "#3d6c9c",
+    "cor3": "#131b22",
+    "accent": "#4e7caf",
+    "danger": ""
+  },
+  "quantized": [
+    "#2b3d4c",
+    "#465c76",
+    "#3d6c9c",
+    "#4e7caf",
+    "#697695",
+    "#6e84b2",
+    "#778ebc",
+    "#94a0c8"
+  ]
+}

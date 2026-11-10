@@ -3,12 +3,15 @@ import QtQuick
 Rectangle {
   id: root
   property bool checked: false
+  property color onColor: "#12b76a"
+  property color offColor: "#d0d5dd"
+  property color knobColor: "white"
   signal toggled()
 
   implicitWidth: 34
   implicitHeight: 18
   radius: height / 2
-  color: checked ? "#12b76a" : "#d0d5dd"
+  color: checked ? onColor : offColor
   Behavior on color { ColorAnimation { duration: 120 } }
 
   Rectangle {
@@ -17,7 +20,7 @@ Rectangle {
     radius: width / 2
     y: 2
     x: root.checked ? root.width - width - 2 : 2
-    color: "white"
+    color: root.knobColor
     Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
   }
 

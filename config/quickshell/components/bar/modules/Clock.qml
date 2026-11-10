@@ -8,15 +8,15 @@ BarItemModel {
   id: root
 
   // ================= CONFIGURAÇÕES =================
-  property real lineSpacing: -12                 // distância entre hora e minuto (aceita negativo)
-  property string fontFamily: "JetBrainsMono NF, ExtraBold"               // vazio = fonte padrão
-  property real fontSize: 22
-  property bool fontBold: true
-  property color textColor: "black"
+  property real lineSpacing: bar ? bar.clockLineSpacing : -12                 // distância entre hora e minuto (aceita negativo)
+  property string fontFamily: bar ? bar.clockFontFamily : "JetBrainsMono NF, ExtraBold"               // vazio = fonte padrão
+  property real fontSize: bar ? bar.clockFontSize : 22
+  property bool fontBold: bar ? bar.clockFontBold : true
+  property color textColor: bar ? bar.clockTextColor : "black"
 
-  property bool showSeconds: true
-  property real secondsFontSize: 22            // tamanho do segundo
-  property bool twelveHour: false              // 12h em vez de 24h
+  property bool showSeconds: bar ? bar.clockShowSeconds : true
+  property real secondsFontSize: bar ? bar.clockSecondsFontSize : 22            // tamanho do segundo
+  property bool twelveHour: bar ? bar.clockTwelveHour : false              // 12h em vez de 24h
 
   property real verticalPadding: 2
   // =================================================

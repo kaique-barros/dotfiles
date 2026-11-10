@@ -11,16 +11,16 @@ BarItemModel {
 
   // ================= CONFIGURAÇÕES =================
   property real boxSize: bar ? bar.pillThickness : 40     // lado do quadrado fechado
-  property real radius: 10                                // cantos arredondados
+  property real radius: bar ? bar.trayRadius : 10                                // cantos arredondados
 
   // fechado
-  property int columns: 2
-  property int rows: 2
-  property real gap: 4
+  property int columns: bar ? bar.trayColumns : 2
+  property int rows: bar ? bar.trayRows : 2
+  property real gap: bar ? bar.trayGap : 4
 
   // aberto
-  property real expandedIconSize: 26
-  property real expandedSpacing: 10
+  property real expandedIconSize: bar ? bar.trayIconSize : 26
+  property real expandedSpacing: bar ? bar.traySpacing : 10
   property real maxLength: 360                            // comprimento máximo aberto, ao longo da barra
   property real scrollStep: 0.25                          // rolagem da lista com a roda do mouse
   property real marginTop: 8

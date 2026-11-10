@@ -161,10 +161,20 @@ PanelWindow {
   property real osdWidthSingle: 52                // largura com um só
   property real osdHeight: 210
   property real osdPadding: 6
+
+  // ---------- seletor de tema (Super+T) ----------
+  property real themeCardWidth: 480               // largura do print do meio (o selecionado)
+  property real themeCardRatio: 16 / 9
+  property int themeSideCount: 3                  // quantos prints aparecem de cada lado
+  property real themeScaleStep: 0.18              // quanto cada print mais ao fundo encolhe
+  property real themeFadeStep: 0.12               // quanto cada print mais ao fundo apaga
+  property real themeSpread: 0.55                 // distância do 1º vizinho, em larguras do print do meio (menor = mais sobreposição)
+  property real themeSpreadStep: 0.30             // distância extra de cada vizinho seguinte
+  property real themeCardRadius: 16
   // ====================================================================
   
   WlrLayershell.exclusionMode: ExclusionMode.Ignore
-  WlrLayershell.keyboardFocus: (dockContent.launcherActive || dockContent.homeKeysActive)
+  WlrLayershell.keyboardFocus: (dockContent.launcherActive || dockContent.homeKeysActive || themePicker.open)
                                ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
   Item {
@@ -235,6 +245,15 @@ PanelWindow {
         animationTime: canva.animationTime
         open: connectivity.openIndex === 2
         pos: connectivity.popupCenter - popupHeight / 2
+      }
+
+      ThemePicker {
+        id: themePicker
+        bar: canva
+        frameColor: canva.frameColor
+        splatterSource: canva.splatterSource
+        splatterOpacity: canva.splatterOpacity
+        animationTime: canva.animationTime
       }
     }
 
@@ -399,6 +418,7 @@ PanelWindow {
     Region { intersection: Intersection.Combine; item: wifiPopup }
     Region { intersection: Intersection.Combine; item: btPopup }
     Region { intersection: Intersection.Combine; item: powerPopup }
+    Region { intersection: Intersection.Combine; item: themePicker }
   }
 
   // Espaço reservado para a barra

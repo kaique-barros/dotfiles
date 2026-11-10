@@ -26,17 +26,17 @@ BarItemModel {
 
   // --- bolinhas ---
   property bool horizontalDots: false  // false = coluna (vertical), true = linha
-  property real dotSize: 12
-  property real dotSpacing: 6
-  property color inactiveColor: "#b4b4b4"
+  property real dotSize: bar ? bar.wsDotSize : 12
+  property real dotSpacing: bar ? bar.wsDotSpacing : 6
+  property color inactiveColor: bar ? bar.wsInactiveColor : "#b4b4b4"
   property int colorAnimation: 150
 
   // --- workspace ativa ---
-  property real activeSize: 28                 // limitado à largura da pílula
-  property color activeColor: "black"
+  property real activeSize: bar ? bar.wsActiveSize : 28                 // limitado à largura da pílula
+  property color activeColor: bar ? bar.wsActiveColor : "black"
   property string iconPath: "/home/kaiqbbrs/rice/config/quickshell/assets/fire.svg"
-  property color iconColor: "white"
-  property real iconSize: 16
+  property color iconColor: bar ? bar.wsIconColor : "white"
+  property real iconSize: bar ? bar.wsIconSize : 16
   property int sizeAnimation: 150
   // ==================================================
 

@@ -12,9 +12,22 @@ PopupModel {
   property bool edgeHovered: false
 
   // ================= CONFIGURAÇÕES =================
-  popupWidth: showBoth ? 110 : 52
-  popupHeight: 210
-  padding: 6
+  popupWidth: showBoth ? (bar ? bar.osdWidthBoth : 110) : (bar ? bar.osdWidthSingle : 52)
+  popupHeight: bar ? bar.osdHeight : 210
+  padding: bar ? bar.osdPadding : 6
+
+  property color osdIconColor: bar ? bar.osdIconColor : "#1e1e2e"
+  property color osdTextColor: bar ? bar.osdTextColor : "#1e1e2e"
+  property color osdFillColor: bar ? bar.osdFillColor : "#1e1e2e"
+  property color osdKnobBorderColor: bar ? bar.osdKnobBorderColor : "white"
+  property color osdTrackColor: bar ? bar.osdTrackColor : "#e4e4ea"
+  property color osdKnobColor: bar ? bar.osdKnobColor : "#11111b"
+  property color osdDividerColor: bar ? bar.osdDividerColor : "#9ca3af"
+  property color osdMutedColor: bar ? bar.dangerColor : "#d32f2f"   // volume mudo
+  property color osdKnobMutedColor: bar ? bar.osdKnobMutedColor : "#757575"
+  property real osdFontSize: bar ? bar.osdFontSize : 10
+  property string fontFamily: bar ? bar.fontFamily : ""
+  readonly property string family: fontFamily !== "" ? fontFamily : Qt.application.font.family
   pos: Math.round((bar.height - popupHeight) / 2)
 
   // largura útil dentro do popup (não depende do conteúdo, evita loop de binding)
@@ -219,7 +232,7 @@ PopupModel {
           Icon {
             anchors.centerIn: parent
             source: "file://" + Quickshell.shellPath("assets/brightness.svg")
-            color: "#1e1e2e"
+            color: root.osdIconColor
             size: 20
           }
         }
@@ -234,7 +247,7 @@ PopupModel {
             id: brightnessTrack
             anchors.fill: parent
             radius: width / 2
-            color: "#e4e4ea"
+            color: root.osdTrackColor
 
             Rectangle {
               anchors.bottom: parent.bottom
@@ -247,7 +260,7 @@ PopupModel {
                 )
               )
               radius: width / 2
-              color: "#1e1e2e"
+              color: root.osdFillColor
             }
 
             Rectangle {
@@ -262,8 +275,8 @@ PopupModel {
               width: 16
               height: 16
               radius: 8
-              color: "#11111b"
-              border.color: "white"
+              color: root.osdKnobColor
+              border.color: root.osdKnobBorderColor
               border.width: 2
             }
           }
@@ -300,9 +313,10 @@ PopupModel {
         Text {
           anchors.horizontalCenter: parent.horizontalCenter
           text: Math.round(root.currentBrightness * 100) + "%"
-          font.pixelSize: 10
+          font.family: root.family
+          font.pixelSize: root.osdFontSize
           font.bold: true
-          color: "#1e1e2e"
+          color: root.osdTextColor
         }
       }
     }
@@ -313,7 +327,7 @@ PopupModel {
       width: 1
       height: 160
       anchors.verticalCenter: parent.verticalCenter
-      color: "#9ca3af"
+      color: root.osdDividerColor
     }
 
     // ---------- VOLUME ----------
@@ -341,7 +355,7 @@ PopupModel {
           Icon {
             anchors.centerIn: parent
             size: 20
-            color: root.isMuted ? "#d32f2f" : "#1e1e2e"
+            color: root.isMuted ? root.osdMutedColor : root.osdIconColor
             source: "file://" + Quickshell.shellPath(parent.iconAsset)
           }
 
@@ -366,7 +380,7 @@ PopupModel {
             id: volumeTrack
             anchors.fill: parent
             radius: width / 2
-            color: "#e4e4ea"
+            color: root.osdTrackColor
 
             Rectangle {
               anchors.bottom: parent.bottom
@@ -376,7 +390,7 @@ PopupModel {
                 Math.min(volumeTrack.height, volumeTrack.height * root.currentVol)
               )
               radius: width / 2
-              color: root.isMuted ? "#9ca3af" : "#1e1e2e"
+              color: root.isMuted ? root.osdDividerColor : root.osdFillColor
             }
 
             Rectangle {
@@ -391,8 +405,8 @@ PopupModel {
               width: 16
               height: 16
               radius: 8
-              color: root.isMuted ? "#757575" : "#11111b"
-              border.color: "white"
+              color: root.isMuted ? root.osdKnobMutedColor : root.osdKnobColor
+              border.color: root.osdKnobBorderColor
               border.width: 2
             }
           }
@@ -439,9 +453,10 @@ PopupModel {
           text: root.isMuted
             ? "Mudo"
             : Math.round(root.currentVol * 100) + "%"
-          font.pixelSize: 10
+          font.family: root.family
+          font.pixelSize: root.osdFontSize
           font.bold: true
-          color: root.isMuted ? "#d32f2f" : "#1e1e2e"
+          color: root.isMuted ? root.osdMutedColor : root.osdTextColor
         }
       }
     }

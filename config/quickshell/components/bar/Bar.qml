@@ -39,6 +39,108 @@ PanelWindow {
   property color itemFillColor: Qt.rgba(itemBackgroundColor.r, itemBackgroundColor.g, itemBackgroundColor.b, itemBackgroundOpacity)
   property real pillThickness: 40
   // ====================================================================
+
+  // ====================================================================
+  //  TEMA: cores, fontes e tamanhos de todos os itens e popups
+  //  Os módulos leem tudo daqui; só mexa em um módulo para casos especiais.
+  // ====================================================================
+
+  // ---------- fonte e cores globais ----------
+  property string fontFamily: ""                  // "" = fonte padrão do sistema
+  property color iconColor: "black"               // cor padrão dos ícones sobre a barra
+  property color barTextColor: "black"            // cor padrão dos textos sobre a barra
+  property color accentColor: "#12b76a"           // conectado / ativo / selecionado / bateria cheia
+  property color warningColor: "#f5b800"          // bateria média
+  property color dangerColor: "#d92d20"           // bateria baixa / volume mudo
+
+  // ---------- itens da barra ----------
+  // setinha e logo
+  property real archIconSize: leftSize - 17
+  property color archIconColor: iconColor
+  property real dockArrowSize: 15
+  property color dockArrowColor: iconColor
+
+  // workspaces
+  property real wsDotSize: 12
+  property real wsDotSpacing: 6
+  property color wsInactiveColor: "#b4b4b4"
+  property real wsActiveSize: 28
+  property color wsActiveColor: "black"
+  property color wsIconColor: "white"             // ícone da workspace ativa
+  property real wsIconSize: 16
+
+  // bandeja (tray)
+  property real trayRadius: 10
+  property int trayColumns: 2
+  property int trayRows: 2
+  property real trayGap: 4
+  property real trayIconSize: 26                  // ícones com a bandeja aberta
+  property real traySpacing: 10
+
+  // bateria
+  property color batteryColor: "black"            // ícone entre o amarelo e 100%
+  property color batteryTextColor: barTextColor
+  property int batteryLowThreshold: 20
+  property int batteryMediumThreshold: 40
+  property real batteryIconSize: 18
+  property real batterySpacing: 3
+  property real batteryFontSize: 12
+  property bool batteryFontBold: true
+
+  // relógio
+  property string clockFontFamily: "JetBrainsMono NF, ExtraBold"
+  property real clockFontSize: 22
+  property bool clockFontBold: true
+  property color clockTextColor: barTextColor
+  property real clockLineSpacing: -12
+  property bool clockShowSeconds: true
+  property real clockSecondsFontSize: 22
+  property bool clockTwelveHour: false
+
+  // conectividade (wifi / bluetooth / energia)
+  property real connIconSize: 20
+  property real connIconSpacing: 10
+  property real connHoverScale: 1.3
+  property color connIconColor: iconColor
+
+  // ---------- popups (wifi / bluetooth / energia) ----------
+  property color popupTitleColor: "#1d2939"       // título (Wi-Fi, Bluetooth, Energia)
+  property color popupTextColor: "#1d2939"        // texto das linhas
+  property color popupMutedColor: "#667085"       // texto secundário (sinal, status, avisos)
+  property color toggleOffColor: "#d0d5dd"        // switch desligado
+  property color toggleKnobColor: "white"         // bolinha do switch
+  property color popupHoverColor: "#e8ebf0"
+  property color popupDividerColor: "#c7cdd6"
+  property real popupTitleFontSize: 13
+  property real popupRowFontSize: 12
+  property real popupSubFontSize: 11
+  property real popupRowHeight: 30
+  property real popupHeaderHeight: 28
+  property real popupPadding: 8
+  property int popupMaxRows: 7
+  property real popupHeaderDividerRatio: 0.9      // tamanho do separador do título (relativo ao popup)
+  property real popupItemDividerRatio: 0.8        // tamanho do separador entre itens
+  property real popupDividerThickness: 1.5
+  property real wifiPopupWidth: 230
+  property real btPopupWidth: 230
+  property real powerPopupWidth: 200
+
+  // ---------- volume e brilho (lado direito) ----------
+  property color osdColor: "#1e1e2e"              // cor base do volume/brilho
+  property color osdIconColor: osdColor
+  property color osdTextColor: osdColor           // porcentagem
+  property color osdFillColor: osdColor           // parte preenchida do slider
+  property color osdKnobBorderColor: "white"
+  property color osdTrackColor: "#e4e4ea"         // trilho do slider
+  property color osdKnobColor: "#11111b"
+  property color osdKnobMutedColor: "#757575"
+  property color osdDividerColor: "#9ca3af"
+  property real osdFontSize: 10
+  property real osdWidthBoth: 110                 // largura com volume e brilho
+  property real osdWidthSingle: 52                // largura com um só
+  property real osdHeight: 210
+  property real osdPadding: 6
+  // ====================================================================
   
   WlrLayershell.exclusionMode: ExclusionMode.Ignore
   WlrLayershell.keyboardFocus: dockContent.launcherActive ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
@@ -76,8 +178,8 @@ PanelWindow {
               ? "assets/dock_arrow_close.svg" 
               : "assets/dock_arrow_open.svg"
           )
-          color: "black"
-          size: 15
+          color: canva.dockArrowColor
+          size: canva.dockArrowSize
         }
       }
 
@@ -183,8 +285,8 @@ PanelWindow {
     Icon {
       anchors.centerIn: parent
       source: "file://" + Quickshell.shellPath("assets/arch-linux.svg")
-      color: "black"
-      size: canva.leftSize - 17
+      color: canva.archIconColor
+      size: canva.archIconSize
     }
   }
 

@@ -9,22 +9,22 @@ BarItemModel {
   id: root
 
   // ================= CONFIGURAÇÕES =================
-  property color defaultColor: "black"         // cor padrão do ícone (acima do amarelo, abaixo de 100%)
-  property color lowColor: "#d92d20"           // abaixo de lowThreshold: vermelho
-  property color mediumColor: "#f5b800"        // até mediumThreshold: amarelo
-  property color fullColor: "#12b76a"          // 100% ou carregando: verde
-  property color textColor: "black"
-  property int lowThreshold: 20
-  property int mediumThreshold: 40
+  property color defaultColor: bar ? bar.batteryColor : "black"         // cor padrão do ícone (acima do amarelo, abaixo de 100%)
+  property color lowColor: bar ? bar.dangerColor : "#d92d20"           // abaixo de lowThreshold: vermelho
+  property color mediumColor: bar ? bar.warningColor : "#f5b800"        // até mediumThreshold: amarelo
+  property color fullColor: bar ? bar.accentColor : "#12b76a"          // 100% ou carregando: verde
+  property color textColor: bar ? bar.batteryTextColor : "black"
+  property int lowThreshold: bar ? bar.batteryLowThreshold : 20
+  property int mediumThreshold: bar ? bar.batteryMediumThreshold : 40
 
   property string iconFile: "battery.svg"
   property string chargingIconFile: "battery_charging.svg"
-  property real iconSize: 18
-  property real spacing: 3                     // espaço entre ícone e texto
+  property real iconSize: bar ? bar.batteryIconSize : 18
+  property real spacing: bar ? bar.batterySpacing : 3                     // espaço entre ícone e texto
 
-  property string fontFamily: ""               // vazio = fonte padrão
-  property real fontSize: 12
-  property bool fontBold: true
+  property string fontFamily: bar ? bar.fontFamily : ""               // vazio = fonte padrão
+  property real fontSize: bar ? bar.batteryFontSize : 12
+  property bool fontBold: bar ? bar.batteryFontBold : true
 
   property real verticalPadding: 3             // folga acima/abaixo, ao longo da barra
   // =================================================

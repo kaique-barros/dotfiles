@@ -20,7 +20,7 @@ input {
 }
 
 output "eDP-1" {
-    scale 1.5      // era 1 no Hyprland (monitor=,preferred,auto,1); 4K em 1.0 fica minúsculo — ajuste/remova
+    scale 1      // era 1 no Hyprland (monitor=,preferred,auto,1); 4K em 1.0 fica minúsculo — ajuste/remova
 }
 
 layout {
@@ -46,7 +46,7 @@ screenshot-path "~/Pictures/Screenshots/Screenshot_%Y-%m-%d_%H-%M-%S.png"
 hotkey-overlay { skip-at-startup; }
 
 environment {
-    XCURSOR_SIZE "24"
+    XCURSOR_SIZE "12"
     GTK_THEME "Adwaita:dark"
     GTK_MODE "dark"
     SDL_VIDEODRIVER "wayland"

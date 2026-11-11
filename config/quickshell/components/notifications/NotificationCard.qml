@@ -12,7 +12,6 @@ Item {
   property bool autoHide: false          // toast: some sozinha depois de um tempo (continua na lista)
   property bool inHistory: false         // no histórico o X apaga de vez; no toast só esconde (continua no histórico)
   signal timedOut()
-  signal hideRequested()
 
   readonly property bool critical: notification.urgency === NotificationUrgency.Critical
   readonly property bool expanded: hover.hovered
@@ -54,10 +53,42 @@ Item {
   }
   Component.onCompleted: enterAnim.start()
 
+  // ---- saída: faz o caminho inverso (sobe e vai para a direita) e só então age ----
+  property int leaveDelay: 0
+  property bool leaveNow: false            // o histórico fechando manda todos saírem
+  property string exitAction: "hide"       // "hide" = só avisa o dono (timedOut); "dismiss" = apaga a notificação; "none" = só some
+  property bool leaving: false
+
+  function leave(action) {
+    if (leaving) return
+    leaving = true
+    exitAction = action
+    enterAnim.stop()
+    exitAnim.start()
+  }
+  onLeaveNowChanged: if (leaveNow) leave("none")
+
+  SequentialAnimation {
+    id: exitAnim
+    running: false
+    PauseAnimation { duration: card.leaveDelay }
+    ParallelAnimation {
+      NumberAnimation { target: card; property: "slideX"; to: card.width * 0.6; duration: 260; easing.type: Easing.InCubic }
+      NumberAnimation { target: card; property: "slideY"; to: -24; duration: 260; easing.type: Easing.InCubic }
+      NumberAnimation { target: card; property: "opacity"; to: 0; duration: 220 }
+    }
+    ScriptAction {
+      script: {
+        if (card.exitAction === "dismiss") card.notification.dismiss()
+        else if (card.exitAction === "hide") card.timedOut()
+      }
+    }
+  }
+
   Timer {
     interval: card.notification.expireTimeout > 0 ? card.notification.expireTimeout * 1000 : card.bar.notifTimeout
-    running: card.autoHide && !card.critical && !card.expanded
-    onTriggered: card.timedOut()
+    running: card.autoHide && !card.critical && !card.expanded && !card.leaving
+    onTriggered: card.leave("hide")
   }
 
   Rectangle {
@@ -155,7 +186,7 @@ Item {
       anchors.fill: parent
       hoverEnabled: true
       cursorShape: Qt.PointingHandCursor
-      onClicked: card.inHistory ? card.notification.dismiss() : card.hideRequested()
+      onClicked: card.leave(card.inHistory ? "dismiss" : "hide")
     }
   }
 }

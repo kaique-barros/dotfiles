@@ -22,11 +22,21 @@ Scope {
   readonly property int total: server.trackedNotifications.values.length
 
   property bool listOpen: false
-  readonly property bool showList: listOpen && !hasToasts && total > 0
+  readonly property bool wantList: listOpen && !hasToasts && total > 0
+
+  // o histórico só sai de cena depois da animação de saída dos cartões
+  property bool showList: false
+  property bool listLeaving: false
+  onWantListChanged: {
+    if (wantList) { listHide.stop(); listLeaving = false; showList = true }
+    else if (hasToasts || total === 0) { listHide.stop(); listLeaving = false; showList = false }
+    else if (showList) { listLeaving = true; listHide.restart() }
+  }
+  Timer { id: listHide; interval: 360; onTriggered: { root.showList = false; root.listLeaving = false } }
 
   function clearAll() {
     const all = server.trackedNotifications.values.slice()
-    for (let i = 0; i < all.length; i++) all[i].dismiss()
+    for (let i = 0; i < all.length; i++) all[i].dismiss()   // some de uma vez
   }
 
   function removeToast(n) { toasts = toasts.filter(x => x && x !== n) }
@@ -74,16 +84,29 @@ Scope {
       Region { item: hot }
     }
 
-    // extremo do canto superior direito: encostar aqui abre o histórico (só existe quando há o que listar)
+    // canto superior direito: zona de detecção maior (o ponteiro parado na borda não gera novos eventos),
+    // mas só conta como "encostou" quando o ponteiro está nos notifHotSize px do extremo.
     Item {
       id: hot
-      property bool hovered: hotHover.hovered
+      property bool hovered: false
+      readonly property real zone: 24
       anchors.top: parent.top
       anchors.right: parent.right
-      width: (root.total > 0 && !root.hasToasts) ? root.bar.notifHotSize : 0
+      width: (root.total > 0 && !root.hasToasts) ? zone : 0
       height: width
 
-      HoverHandler { id: hotHover; onHoveredChanged: root.updateList() }
+      MouseArea {
+        anchors.fill: parent
+        hoverEnabled: true
+        acceptedButtons: Qt.NoButton
+        function check() {
+          hot.hovered = mouseX >= width - root.bar.notifHotSize && mouseY <= root.bar.notifHotSize
+          root.updateList()
+        }
+        onPositionChanged: check()
+        onEntered: check()
+        onExited: { hot.hovered = false; root.updateList() }
+      }
     }
 
     Flickable {
@@ -142,8 +165,9 @@ Scope {
             notification: modelData
             autoHide: !root.showList
             inHistory: root.showList
+            leaveNow: root.listLeaving
+            leaveDelay: Math.min(index, 8) * 25
             onTimedOut: root.removeToast(modelData)
-            onHideRequested: root.removeToast(modelData)
           }
         }
       }

@@ -97,9 +97,6 @@ binds {
     Mod+Space { spawn "fcitx5-remote" "-t"; }
     Mod+R { spawn "sh" "-c" "~/.config/quickshell/toggle_dock.sh"; }
     Mod+T { spawn "qs" "ipc" "call" "theme" "toggle"; }
-    // páginas da dock (antes F/G globais): Mod+] / Mod+[
-    Mod+BracketRight { spawn "qs" "ipc" "call" "dock" "next"; }
-    Mod+BracketLeft  { spawn "qs" "ipc" "call" "dock" "prev"; }
 
     // ---- janelas ----
     Mod+Q { spawn "sh" "-c" "~/.config/niri/smart-close.sh"; }
@@ -114,23 +111,17 @@ binds {
     Mod+Equal { set-column-width "+10%"; }
     Mod+Ctrl+R { switch-preset-column-width; }
 
-    // ---- foco (hjkl + setas) ----
-    Mod+H     { focus-column-left; }
-    Mod+L     { focus-column-right; }
-    Mod+J     { focus-window-down; }
-    Mod+K     { focus-window-up; }
-    Mod+Left  { focus-column-left; }
-    Mod+Right { focus-column-right; }
-    Mod+Down  { focus-window-down; }
-    Mod+Up    { focus-window-up; }
+    // ---- foco: J/K = coluna esquerda/direita (vale também no overview), H/L = janela acima/abaixo ----
+    Mod+J { focus-column-left; }
+    Mod+K { focus-column-right; }
+    Mod+H { focus-window-up; }
+    Mod+L { focus-window-down; }
 
     // mover (Shift)
-    Mod+Shift+H     { move-column-left; }
-    Mod+Shift+L     { move-column-right; }
-    Mod+Shift+J     { move-window-down; }
-    Mod+Shift+K     { move-window-up; }
-    Mod+Shift+Left  { move-column-left; }
-    Mod+Shift+Right { move-column-right; }
+    Mod+Shift+J { move-column-left; }
+    Mod+Shift+K { move-column-right; }
+    Mod+Shift+H { move-window-up; }
+    Mod+Shift+L { move-window-down; }
     // puxar/expulsar da coluna (substitui o split do dwindle)
     Mod+Comma  { consume-window-into-column; }
     Mod+Period { expel-window-from-column; }

@@ -27,12 +27,10 @@ Item {
   function nextPage() { pageView.currentPage = Math.min(pageView.totalPages - 1, pageView.currentPage + 1) }
   function prevPage() { pageView.currentPage = Math.max(0, pageView.currentPage - 1) }
 
-  // niri: `qs ipc call dock next|prev` (bind no config.kdl)
-  IpcHandler {
-    target: "dock"
-    function next(): void { root.nextPage() }
-    function prev(): void { root.prevPage() }
-  }
+  // F/G trocam de página enquanto a dock está aberta e não se está digitando na busca.
+  // Funciona porque a barra pega o teclado (Exclusive) com a dock aberta — sem bind global no compositor.
+  Shortcut { sequence: "F"; enabled: barDrawer.dockActive && !launcher.searching; onActivated: root.nextPage() }
+  Shortcut { sequence: "G"; enabled: barDrawer.dockActive && !launcher.searching; onActivated: root.prevPage() }
 
   readonly property bool launcherActive: barDrawer.dockActive && pageView.currentPage === 1
 

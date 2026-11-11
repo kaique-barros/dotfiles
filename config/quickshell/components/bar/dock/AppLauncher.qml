@@ -12,18 +12,17 @@ Item {
   id: root
 
   // ================= CONFIGURAÇÕES =================
-  // ordenação: "usage" = mais usados primeiro (histórico do rofi + lançamentos feitos aqui)
+  // ordenação: "usage" = mais usados primeiro (lançamentos feitos aqui; importe o cache antigo do rofi com tools/import-rofi-cache.sh)
   //            "alpha" = ordem alfabética
   property string sortMode: "usage"
 
   property bool active: false              // ligado pela dock quando esta página está visível
   property bool closeOnLaunch: true        // fecha a dock depois de lançar
 
-  // "all"  = todos os apps (como o rofi) | "user" = só ~/.local/share/applications
+  // "all"  = todos os apps  | "user" = só ~/.local/share/applications
   property string source: "all"
 
   // histórico de uso (formato "contagem id" por linha)
-  property string rofiHistory: "${XDG_CACHE_HOME:-$HOME/.cache}/rofi3.druncache"
   property string usageFile: "${XDG_CACHE_HOME:-$HOME/.cache}/quickshell-launcher.usage"
 
   // grade
@@ -172,7 +171,7 @@ Item {
     u[key] = (u[key] || 0) + 1
     usage = u
 
-    // grava no arquivo próprio (não mexe no cache do rofi)
+    // grava no arquivo próprio 
     const script = 'f="' + usageFile + '"; touch "$f"; ' +
       "awk -v id=\"$1\" 'BEGIN{d=0} $2==id{print $1+1, $2; d=1; next} {print} END{if(!d) print 1, id}' " +
       '"$f" > "$f.tmp" && mv "$f.tmp" "$f"'
@@ -378,10 +377,10 @@ Item {
     }
   }
 
-  // histórico do rofi + o nosso, somados
+  // histórico de uso
   Process {
     id: usageReader
-    command: ["sh", "-c", 'cat "' + root.rofiHistory + '" "' + root.usageFile + '" 2>/dev/null']
+    command: ["sh", "-c", 'cat "' + root.usageFile + '" 2>/dev/null']
     running: true
     stdout: StdioCollector {
       onStreamFinished: root.parseUsage(text)

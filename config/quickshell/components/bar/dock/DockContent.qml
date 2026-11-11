@@ -3,7 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Hyprland
+import Quickshell.Io
 
 import "../models"
 import "."
@@ -27,8 +27,12 @@ Item {
   function nextPage() { pageView.currentPage = Math.min(pageView.totalPages - 1, pageView.currentPage + 1) }
   function prevPage() { pageView.currentPage = Math.max(0, pageView.currentPage - 1) }
 
-  GlobalShortcut { appid: "quickshell"; name: "dockNext"; description: "Próxima página da dock"; onPressed: root.nextPage() }
-  GlobalShortcut { appid: "quickshell"; name: "dockPrev"; description: "Página anterior da dock"; onPressed: root.prevPage() }
+  // niri: `qs ipc call dock next|prev` (bind no config.kdl)
+  IpcHandler {
+    target: "dock"
+    function next(): void { root.nextPage() }
+    function prev(): void { root.prevPage() }
+  }
 
   readonly property bool launcherActive: barDrawer.dockActive && pageView.currentPage === 1
 
@@ -40,30 +44,6 @@ Item {
                              "page2.y:", page2.y, "launcher h:", launcher.height,
                              "currentPage:", pageView.currentPage)
   }
-
-  property bool shortcutsBound: false
-  function setShortcutsBound(on) {
-    if (on === shortcutsBound) return
-    shortcutsBound = on
-    Quickshell.execDetached(["hyprctl", "--batch", on
-      ? "keyword bind , F, global, quickshell:dockNext ; keyword bind , G, global, quickshell:dockPrev"
-      : "keyword unbind , F ; keyword unbind , G"])
-  }
-
-  function syncShortcuts() {
-    setShortcutsBound(barDrawer.dockActive && !launcher.searching)
-  }
-
-  Connections {
-    target: root.barDrawer
-    function onDockActiveChanged() { root.syncShortcuts() }
-  }
-  Connections {
-    target: launcher
-    function onSearchingChanged() { root.syncShortcuts() }
-  }
-
-  Component.onDestruction: root.setShortcutsBound(false)
 
   // ================= 1. RETÂNGULO SEPARADOR COM SOMBRA INTERNA =================
   // Retângulo com cantos arredondados e sombra interna separando o conteúdo da dock

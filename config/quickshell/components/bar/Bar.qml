@@ -1,7 +1,6 @@
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
-import Quickshell.Hyprland
 import QtQuick
 import QtQuick.Effects
 

@@ -35,6 +35,25 @@ Item {
 
   HoverHandler { id: hover }
 
+  // ---- entrada: vem do lado direito e desce até o lugar (toast novo e abertura do histórico) ----
+  property int enterDelay: 0               // escalonamento no histórico (ms)
+  property real slideX: width * 0.6
+  property real slideY: -24
+  opacity: 0
+  transform: Translate { x: card.slideX; y: card.slideY }
+
+  SequentialAnimation {
+    id: enterAnim
+    running: false
+    PauseAnimation { duration: card.enterDelay }
+    ParallelAnimation {
+      NumberAnimation { target: card; property: "slideX"; to: 0; duration: 320; easing.type: Easing.OutCubic }
+      NumberAnimation { target: card; property: "slideY"; to: 0; duration: 380; easing.type: Easing.OutCubic }
+      NumberAnimation { target: card; property: "opacity"; to: 1; duration: 220 }
+    }
+  }
+  Component.onCompleted: enterAnim.start()
+
   Timer {
     interval: card.notification.expireTimeout > 0 ? card.notification.expireTimeout * 1000 : card.bar.notifTimeout
     running: card.autoHide && !card.critical && !card.expanded

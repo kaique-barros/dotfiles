@@ -135,6 +135,8 @@ Scope {
 
           delegate: NotificationCard {
             required property var modelData
+            required property int index
+            enterDelay: root.showList ? Math.min(index, 8) * 45 : 0
             width: stack.width
             bar: root.bar
             notification: modelData

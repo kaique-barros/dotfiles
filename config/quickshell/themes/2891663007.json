@@ -1,0 +1,23 @@
+{
+  "id": "2891663007",
+  "name": "Totoro",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/2891663007.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#04090c",
+    "cor2": "#132b4d",
+    "cor3": "#bbc1c7",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#050b0f",
+    "#0c1921",
+    "#12273f",
+    "#132b4d",
+    "#132a48",
+    "#142b4e",
+    "#152a43",
+    "#556574"
+  ]
+}

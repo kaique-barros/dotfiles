@@ -1,0 +1,23 @@
+{
+  "id": "2859070710",
+  "name": "爱莉希雅 真我•人之律者《崩坏3》4K",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/2859070710.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#070a0b",
+    "cor2": "#6d6e6f",
+    "cor3": "#a4a3a4",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#090c0e",
+    "#0a0e17",
+    "#111114",
+    "#12121a",
+    "#181518",
+    "#19161b",
+    "#1c1a1c",
+    "#1e1b1d"
+  ]
+}

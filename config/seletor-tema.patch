@@ -1,0 +1,502 @@
+diff --git a/config/hypr/configs/input.conf b/config/hypr/configs/input.conf
+index 4753d58..8ed0087 100644
+--- a/config/hypr/configs/input.conf
++++ b/config/hypr/configs/input.conf
+@@ -51,6 +51,7 @@ bind = $mainMod, O, exec, obsidian
+ bind = $mainMod, D, exec, hyprctl dispatch dpms toggle
+ bind = $mainMod, Space, exec, fcitx5-remote -t
+ bind = $mainMod, R, exec, ~/.config/quickshell/toggle_dock.sh
++bind = $mainMod, T, exec, qs ipc call theme toggle
+ 
+ # Move focus with mainMod + arrow keys
+ bind = $mainMod, left, movefocus, l
+diff --git a/config/hypr/hyprland.conf b/config/hypr/hyprland.conf
+index 23e8041..fde5207 100644
+--- a/config/hypr/hyprland.conf
++++ b/config/hypr/hyprland.conf
+@@ -50,7 +50,7 @@ exec-once = swaync
+ exec-once = hyprpaper
+ exec-once = udiskie -2 &
+ exec-once = fcitx5 -d
+-exec-once = linux-wallpaperengine --screen-root eDP-1 --bg 3828716991 --scaling fill --clamp border
++exec-once = ~/.config/quickshell/tools/wallpaper.sh start
+ exec-once = snixembed
+ 
+ #############################
+diff --git a/config/quickshell/components/bar/Bar.qml b/config/quickshell/components/bar/Bar.qml
+index e11d8a4..8b1e112 100644
+--- a/config/quickshell/components/bar/Bar.qml
++++ b/config/quickshell/components/bar/Bar.qml
+@@ -161,10 +161,20 @@ PanelWindow {
+   property real osdWidthSingle: 52                // largura com um só
+   property real osdHeight: 210
+   property real osdPadding: 6
++
++  // ---------- seletor de tema (Super+T) ----------
++  property real themeCardWidth: 480               // largura do print do meio (o selecionado)
++  property real themeCardRatio: 16 / 9
++  property int themeSideCount: 3                  // quantos prints aparecem de cada lado
++  property real themeScaleStep: 0.18              // quanto cada print mais ao fundo encolhe
++  property real themeFadeStep: 0.12               // quanto cada print mais ao fundo apaga
++  property real themeSpread: 0.55                 // distância do 1º vizinho, em larguras do print do meio (menor = mais sobreposição)
++  property real themeSpreadStep: 0.30             // distância extra de cada vizinho seguinte
++  property real themeCardRadius: 16
+   // ====================================================================
+   
+   WlrLayershell.exclusionMode: ExclusionMode.Ignore
+-  WlrLayershell.keyboardFocus: (dockContent.launcherActive || dockContent.homeKeysActive)
++  WlrLayershell.keyboardFocus: (dockContent.launcherActive || dockContent.homeKeysActive || themePicker.open)
+                                ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+ 
+   Item {
+@@ -236,6 +246,15 @@ PanelWindow {
+         open: connectivity.openIndex === 2
+         pos: connectivity.popupCenter - popupHeight / 2
+       }
++
++      ThemePicker {
++        id: themePicker
++        bar: canva
++        frameColor: canva.frameColor
++        splatterSource: canva.splatterSource
++        splatterOpacity: canva.splatterOpacity
++        animationTime: canva.animationTime
++      }
+     }
+ 
+     MultiEffect {
+@@ -399,6 +418,7 @@ PanelWindow {
+     Region { intersection: Intersection.Combine; item: wifiPopup }
+     Region { intersection: Intersection.Combine; item: btPopup }
+     Region { intersection: Intersection.Combine; item: powerPopup }
++    Region { intersection: Intersection.Combine; item: themePicker }
+   }
+ 
+   // Espaço reservado para a barra
+diff --git a/config/quickshell/components/bar/modules/ThemePicker.qml b/config/quickshell/components/bar/modules/ThemePicker.qml
+new file mode 100644
+index 0000000..d3099aa
+--- /dev/null
++++ b/config/quickshell/components/bar/modules/ThemePicker.qml
+@@ -0,0 +1,183 @@
++import QtQuick
++import Quickshell
++import Quickshell.Io
++import Quickshell.Widgets
++
++import "../../theme"
++import "../models"
++
++// Seletor de tema: popup colado na parte de baixo da tela, com os prints dos wallpapers
++// (themes/screenshots/<id>.*) num carrossel. O tema atual fica no centro, maior; os outros
++// vão ficando menores e mais para trás, um sobrepondo o outro.
++//
++//   Super+T (qs ipc call theme toggle)   abre/fecha
++//   h / l  (ou ← →, roda do mouse)       passa para o anterior / próximo: já troca o tema e o wallpaper
++//   Esc, Enter ou q                      fecha (o tema escolhido fica)
++PopupModel {
++  id: root
++
++  edge: "bottom"
++
++  // ================= CONFIGURAÇÕES (valores vêm do Bar.qml) =================
++  property real cardWidth: bar ? bar.themeCardWidth : 480            // largura do print do meio
++  property real cardRatio: bar ? bar.themeCardRatio : 16 / 9
++  property int sideCount: bar ? bar.themeSideCount : 3               // quantos aparecem de cada lado
++  property real scaleStep: bar ? bar.themeScaleStep : 0.18           // quanto cada posição para trás encolhe
++  property real fadeStep: bar ? bar.themeFadeStep : 0.12             // quanto cada posição para trás apaga
++  property real spread: bar ? bar.themeSpread : 0.55                 // distância do 1º vizinho (em larguras do print do meio)
++  property real spreadStep: bar ? bar.themeSpreadStep : 0.30         // distância extra de cada vizinho seguinte
++  property real cardRadius: bar ? bar.themeCardRadius : 16
++  property color selectedBorderColor: bar ? bar.accentColor : "#12b76a"
++  property real selectedBorderWidth: 3
++  // =========================================================================
++
++  readonly property real cardHeight: cardWidth / cardRatio
++
++  function scaleAt(ad) { return Math.max(0.3, 1 - scaleStep * ad) }
++  function offsetAt(ad) { return ad === 0 ? 0 : cardWidth * (spread + spreadStep * (ad - 1)) }
++
++  readonly property real extent: offsetAt(sideCount) + scaleAt(sideCount) * cardWidth / 2
++
++  padding: 14
++  popupHeight: Math.round(cardHeight + 2 * padding)
++  popupWidth: Math.round(Math.min(2 * extent + 2 * padding, bar.width - bar.leftSize - bar.rightSize))
++  pos: bar.leftSize + (bar.width - bar.leftSize - bar.rightSize - popupWidth) / 2
++
++  // ---------- lista de wallpapers ----------
++  property var entries: []         // [{ id, path }]
++  property int current: 0
++  property bool pendingSync: true  // alinhar o carrossel com o tema atual quando a lista chegar
++
++  function syncCurrent() {
++    const i = entries.findIndex(e => e.id === Theme.currentId)
++    current = i >= 0 ? i : 0
++  }
++
++  function refresh() { lister.running = true }
++
++  Process {
++    id: lister
++    running: true
++    command: ["sh", "-c",
++      'for f in "$1"/*; do [ -f "$f" ] || continue; b="${f##*/}"; case "$b" in .*) continue;; esac; printf "%s\\t%s\\n" "${b%.*}" "$f"; done | sort',
++      "sh", Quickshell.shellPath("themes/screenshots")]
++    stdout: StdioCollector {
++      onStreamFinished: {
++        root.entries = text.split("\n")
++          .filter(l => l.indexOf("\t") > 0)
++          .map(l => ({ id: l.split("\t")[0], path: l.split("\t").slice(1).join("\t") }))
++        if (root.pendingSync) { root.syncCurrent(); root.pendingSync = false }
++      }
++    }
++  }
++
++  // ---------- abrir / fechar / passar ----------
++  function toggle() { open ? close() : show() }
++  function show() {
++    pendingSync = true
++    refresh()
++    syncCurrent()
++    open = true
++  }
++  function close() { open = false }
++
++  function go(delta) {
++    if (entries.length === 0) return
++    const n = Math.max(0, Math.min(entries.length - 1, current + delta))
++    if (n === current) return
++    current = n
++    Theme.select(entries[n].id)
++  }
++
++  IpcHandler {
++    target: "theme"
++    function toggle(): void { root.toggle() }
++    function open(): void { root.show() }
++    function close(): void { root.close() }
++  }
++
++  // o teclado precisa do foco da janela (o Bar.qml dá foco exclusivo enquanto estiver aberto)
++  onOpenChanged: if (open) Qt.callLater(() => keys.forceActiveFocus())
++  onShownChanged: if (shown && open) Qt.callLater(() => keys.forceActiveFocus())
++
++  Item {
++    id: keys
++    focus: root.open
++
++    Keys.onPressed: (event) => {
++      if (event.modifiers & (Qt.ControlModifier | Qt.AltModifier | Qt.MetaModifier)) return
++      if (event.key === Qt.Key_H || event.key === Qt.Key_Left)       { root.go(-1); event.accepted = true }
++      else if (event.key === Qt.Key_L || event.key === Qt.Key_Right) { root.go(1); event.accepted = true }
++      else if (event.key === Qt.Key_Escape || event.key === Qt.Key_Return
++               || event.key === Qt.Key_Enter || event.key === Qt.Key_Q) { root.close(); event.accepted = true }
++    }
++  }
++
++  // ---------- carrossel ----------
++  readonly property real areaWidth: width - 2 * padding
++
++  WheelHandler {
++    onWheel: (wheel) => root.go(wheel.angleDelta.y > 0 ? -1 : 1)
++  }
++
++  Repeater {
++    model: root.entries
++
++    delegate: Item {
++      id: card
++      required property var modelData
++      required property int index
++
++      readonly property int d: index - root.current
++      readonly property int ad: Math.abs(d)
++      readonly property bool inRange: ad <= root.sideCount
++      readonly property int place: Math.min(ad, root.sideCount + 1)    // quem está fora do alcance espera na ponta
++
++      width: root.cardWidth
++      height: root.cardHeight
++      x: root.areaWidth / 2 - width / 2 + (d < 0 ? -1 : 1) * root.offsetAt(place)
++      y: 0
++      scale: root.scaleAt(place)
++      z: 100 - ad
++      opacity: inRange ? Math.max(0, 1 - root.fadeStep * ad) : 0
++      visible: opacity > 0.01
++
++      Behavior on x { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
++      Behavior on scale { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
++      Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.OutCubic } }
++
++      ClippingRectangle {
++        anchors.fill: parent
++        radius: root.cardRadius
++        color: "transparent"
++
++        Image {
++          anchors.fill: parent
++          source: card.inRange
++            ? "file://" + card.modelData.path.split("/").map(encodeURIComponent).join("/")
++            : ""
++          fillMode: Image.PreserveAspectCrop
++          asynchronous: true
++          cache: true
++          sourceSize.width: Math.round(root.cardWidth * 2)
++        }
++      }
++
++      // moldura do tema selecionado
++      Rectangle {
++        anchors.fill: parent
++        radius: root.cardRadius
++        color: "transparent"
++        border.width: card.d === 0 ? root.selectedBorderWidth : 0
++        border.color: root.selectedBorderColor
++      }
++
++      MouseArea {
++        anchors.fill: parent
++        enabled: card.d !== 0 && card.inRange
++        cursorShape: Qt.PointingHandCursor
++        onClicked: root.go(card.d)
++      }
++    }
++  }
++}
+diff --git a/config/quickshell/components/theme/Theme.qml b/config/quickshell/components/theme/Theme.qml
+index 41a2153..02f1a40 100644
+--- a/config/quickshell/components/theme/Theme.qml
++++ b/config/quickshell/components/theme/Theme.qml
+@@ -6,7 +6,9 @@ import Quickshell.Io
+ 
+ // Tema atual, lido de themes/<id>.json (o id é o mesmo do Wallpaper Engine).
+ //
+-//   Theme.currentId            id do tema ("" = tudo padrão); definido no shell.qml
++//   Theme.currentId            id do tema em uso ("" = tudo padrão)
++//   Theme.select("1845706469") troca de tema: aplica na hora, salva e troca o wallpaper (tools/wallpaper.sh)
++//   Theme.defaultId            tema usado enquanto não houver um salvo; definido no shell.qml
+ //   Theme.color("cor1", "#fff") cor do tema, ou o valor padrão quando o tema não define
+ //   Theme.asset("battery.svg")  ícone/imagem do tema, ou o de assets/ quando o tema não tem
+ //
+@@ -23,9 +25,15 @@ import Quickshell.Io
+ Singleton {
+   id: root
+ 
+-  property string currentId: ""
++  // Quem manda: o que foi escolhido (QS_THEME, o arquivo salvo ou o seletor) > defaultId do shell.qml
++  property string defaultId: ""
++  property string chosenId: Quickshell.env("QS_THEME") || ""
++  readonly property string currentId: chosenId !== "" ? chosenId : defaultId
+ 
+   readonly property string themesDir: Quickshell.shellPath("themes")
++  readonly property string wallpaperScript: Quickshell.shellPath("tools/wallpaper.sh")
++  // o mesmo arquivo que o tools/wallpaper.sh grava, para o tema sobreviver ao reinício
++  readonly property string stateFile: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/quickshell/theme"
+   readonly property string themeFile: currentId !== "" ? themesDir + "/" + currentId + ".json" : ""
+ 
+   // ---------- dados do tema carregado ----------
+@@ -65,6 +73,13 @@ Singleton {
+     return typeof v === "string" && /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v.trim())
+   }
+ 
++  // troca de tema: as cores mudam na hora; o wallpaper troca quando você para de passar (evita reiniciar o engine a cada tecla)
++  function select(id) {
++    if (!id || id === currentId) return
++    chosenId = id
++    wallpaperTimer.restart()
++  }
++
+   function reset() {
+     name = ""
+     screenshot = ""
+@@ -100,6 +115,23 @@ Singleton {
+     if (assetsDir !== "") lister.running = true
+   }
+ 
++  Timer {
++    id: wallpaperTimer
++    interval: 350
++    onTriggered: Quickshell.execDetached([root.wallpaperScript, "set", root.currentId])
++  }
++
++  // tema salvo da última vez (só vale se nada foi escolhido ainda)
++  FileView {
++    id: stateView
++    path: root.stateFile
++    printErrors: false
++    onLoaded: {
++      const id = text().trim()
++      if (id !== "" && root.chosenId === "") root.chosenId = id
++    }
++  }
++
+   FileView {
+     id: file
+     path: root.themeFile
+diff --git a/config/quickshell/shell.qml b/config/quickshell/shell.qml
+index ce5d0b0..82937a2 100644
+--- a/config/quickshell/shell.qml
++++ b/config/quickshell/shell.qml
+@@ -10,14 +10,15 @@ import QtQml
+ ShellRoot {
+   id: root
+ 
+-  // Tema em uso: o id do wallpaper no Wallpaper Engine (ex.: "1845706469").
+-  // Lê themes/<id>.json; "" ou um id sem arquivo = cores e assets padrão.
+-  // Dá para trocar sem editar o arquivo: QS_THEME=1845706469 qs
+-  readonly property string themeId: Quickshell.env("QS_THEME") || ""
++  // Tema padrão: o id do wallpaper no Wallpaper Engine (ex.: "1845706469").
++  // Só vale enquanto não houver um tema salvo (o seletor, Super+T, salva a escolha em
++  // ~/.local/state/quickshell/theme). Lê themes/<id>.json; "" ou um id sem arquivo = cores e assets padrão.
++  // Para testar sem salvar nada: QS_THEME=1845706469 qs
++  readonly property string themeId: "3828716991"
+ 
+   Binding {
+     target: Theme
+-    property: "currentId"
++    property: "defaultId"
+     value: root.themeId
+   }
+ 
+diff --git a/config/quickshell/themes/README.md b/config/quickshell/themes/README.md
+index 038206b..00f43d8 100644
+--- a/config/quickshell/themes/README.md
++++ b/config/quickshell/themes/README.md
+@@ -5,14 +5,15 @@ Um tema = um arquivo `themes/<id>.json`, onde `<id>` é o id do wallpaper no Wal
+ 
+ ## Usar um tema
+ 
+-No `shell.qml`:
+-
+-```qml
+-readonly property string themeId: "1845706469"
+-```
+-
+-ou, sem editar nada: `QS_THEME=1845706469 qs`. Id vazio, ou sem arquivo, usa tudo padrão.
+-Editar o json com o shell aberto aplica na hora.
++- **Seletor (Super+T):** abre um popup embaixo da tela com os prints dos wallpapers. `h`/`l` (ou ← →, roda do mouse,
++  clique) passam de um para o outro e já trocam o tema e o wallpaper; `Esc`, `Enter` ou `q` fecham, e o tema escolhido fica.
++  O atalho é `bind = $mainMod, T, exec, qs ipc call theme toggle` (também existem `theme open` e `theme close`).
++- **Persistência:** a escolha é salva em `~/.local/state/quickshell/theme`. No `hyprland.conf`, em vez de iniciar o
++  `linux-wallpaperengine` direto, use `exec-once = ~/.config/quickshell/tools/wallpaper.sh start`: ele sobe o engine
++  com o tema salvo e o shell lê o mesmo arquivo. Monitores e opções do engine ficam em `themes/engine.conf`.
++- **Padrão:** `themeId` no `shell.qml` vale só enquanto não existe tema salvo (e `DEFAULT_ID` no `engine.conf` faz o
++  mesmo papel para o wallpaper). Para testar sem salvar nada: `QS_THEME=1845706469 qs`.
++- Id vazio, ou sem arquivo em `themes/`, usa cores e assets padrão. Editar o json com o shell aberto aplica na hora.
+ 
+ ## Formato
+ 
+diff --git a/config/quickshell/themes/engine.conf b/config/quickshell/themes/engine.conf
+new file mode 100644
+index 0000000..517d60e
+--- /dev/null
++++ b/config/quickshell/themes/engine.conf
+@@ -0,0 +1,13 @@
++# Opções do linux-wallpaperengine usadas por tools/wallpaper.sh (é um arquivo de shell).
++
++# Monitores (separados por espaço). Vazio = todos os que o hyprctl listar.
++MONITORS="eDP-1"
++
++# Opções antes dos wallpapers (ex.: "--silent --fps 30").
++GLOBAL_ARGS=""
++
++# Opções de cada wallpaper, depois do --bg.
++BG_ARGS="--scaling fill --clamp border"
++
++# Wallpaper usado enquanto não houver tema salvo.
++DEFAULT_ID="3828716991"
+diff --git a/config/quickshell/tools/wallpaper.sh b/config/quickshell/tools/wallpaper.sh
+new file mode 100755
+index 0000000..538a435
+--- /dev/null
++++ b/config/quickshell/tools/wallpaper.sh
+@@ -0,0 +1,90 @@
++#!/usr/bin/env bash
++# Inicia o linux-wallpaperengine com o tema salvo e troca de wallpaper/tema.
++#
++#   wallpaper.sh start        inicia com o tema salvo (use no exec-once do hyprland.conf)
++#   wallpaper.sh set <id>     salva <id> como tema atual e troca o wallpaper
++#   wallpaper.sh get          mostra o id salvo
++#
++# O id fica em ${XDG_STATE_HOME:-~/.local/state}/quickshell/theme (o shell lê o mesmo arquivo).
++# Monitores e opções do engine ficam em themes/engine.conf.
++set -u
++
++HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
++ROOT="$(dirname "$HERE")"
++CONF="$ROOT/themes/engine.conf"
++STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell"
++STATE_FILE="$STATE_DIR/theme"
++LOCK="${XDG_RUNTIME_DIR:-/tmp}/quickshell-wallpaper.lock"
++
++LWE="linux-wallpaperengine"
++MONITORS=""        # vazio = todos os monitores do hyprctl
++GLOBAL_ARGS=""     # opções do engine antes dos wallpapers (ex.: --silent --fps 30)
++BG_ARGS=""         # opções de cada wallpaper (ex.: --scaling fill --clamp border)
++DEFAULT_ID=""      # usado enquanto não existir tema salvo
++SWITCH_OVERLAP=1   # segundos com o engine novo e o antigo juntos (evita piscar a tela)
++# shellcheck disable=SC1090
++[ -f "$CONF" ] && . "$CONF"
++
++current_id() {
++  local id=""
++  [ -s "$STATE_FILE" ] && id="$(tr -d '[:space:]' < "$STATE_FILE")"
++  echo "${id:-$DEFAULT_ID}"
++}
++
++monitors() {
++  if [ -n "$MONITORS" ]; then echo $MONITORS; else hyprctl monitors -j 2>/dev/null | jq -r '.[].name'; fi
++}
++
++engine_pids() { pgrep -f '(^|/)linux-wallpaperengine( |$)' || true; }
++
++launch() {
++  local id="$1" m
++  local -a args
++  # shellcheck disable=SC2206
++  args=($GLOBAL_ARGS)
++  for m in $(monitors); do
++    # shellcheck disable=SC2206
++    args+=(--screen-root "$m" --bg "$id" $BG_ARGS)
++  done
++  setsid -f "$LWE" "${args[@]}" >/dev/null 2>&1
++}
++
++switch_to() {
++  local id="$1" old
++  old="$(engine_pids)"
++  launch "$id"
++  if [ -n "$old" ]; then
++    sleep "$SWITCH_OVERLAP"
++    # shellcheck disable=SC2086
++    kill $old 2>/dev/null
++  fi
++}
++
++cmd="${1:-}"
++case "$cmd" in
++  get)
++    current_id
++    ;;
++  start)
++    id="$(current_id)"
++    [ -n "$id" ] || { echo "sem tema salvo e sem DEFAULT_ID em $CONF" >&2; exit 1; }
++    command -v "$LWE" >/dev/null || { echo "não achei o $LWE no PATH" >&2; exit 1; }
++    exec 9>"$LOCK"; flock 9
++    switch_to "$id"
++    ;;
++  set)
++    id="${2:-}"
++    [[ "$id" =~ ^[A-Za-z0-9_.-]+$ ]] || { echo "uso: $0 set <id>" >&2; exit 2; }
++    mkdir -p "$STATE_DIR"
++    printf '%s\n' "$id" > "$STATE_FILE"
++    command -v "$LWE" >/dev/null || { echo "não achei o $LWE no PATH" >&2; exit 1; }
++    exec 9>"$LOCK"; flock 9
++    # se chegou uma troca mais nova enquanto esperava o lock, ela cuida do resto
++    [ "$(current_id)" = "$id" ] || exit 0
++    switch_to "$id"
++    ;;
++  *)
++    sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
++    exit 2
++    ;;
++esac

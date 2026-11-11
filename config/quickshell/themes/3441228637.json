@@ -1,0 +1,23 @@
+{
+  "id": "3441228637",
+  "name": "Ender Denji (Chainsaw Man) WUHD (4K)",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3441228637.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#08040b",
+    "cor2": "#a12a40",
+    "cor3": "#e1c1c1",
+    "accent": "#b46563",
+    "danger": ""
+  },
+  "quantized": [
+    "#0a050e",
+    "#28091e",
+    "#131235",
+    "#271738",
+    "#4a0924",
+    "#56394c",
+    "#a12a40",
+    "#b46563"
+  ]
+}

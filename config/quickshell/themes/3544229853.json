@@ -1,0 +1,23 @@
+{
+  "id": "3544229853",
+  "name": "Hunt: Showdown Official",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3544229853.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#000000",
+    "cor2": "#636363",
+    "cor3": "#999999",
+    "accent": "",
+    "danger": ""
+  },
+  "quantized": [
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000",
+    "#000000"
+  ]
+}

@@ -5,14 +5,15 @@ Um tema = um arquivo `themes/<id>.json`, onde `<id>` é o id do wallpaper no Wal
 
 ## Usar um tema
 
-No `shell.qml`:
-
-```qml
-readonly property string themeId: "1845706469"
-```
-
-ou, sem editar nada: `QS_THEME=1845706469 qs`. Id vazio, ou sem arquivo, usa tudo padrão.
-Editar o json com o shell aberto aplica na hora.
+- **Seletor (Super+T):** abre um popup embaixo da tela com os prints dos wallpapers. `h`/`l` (ou ← →, roda do mouse,
+  clique) passam de um para o outro e já trocam o tema e o wallpaper; `Esc`, `Enter` ou `q` fecham, e o tema escolhido fica.
+  O atalho é `bind = $mainMod, T, exec, qs ipc call theme toggle` (também existem `theme open` e `theme close`).
+- **Persistência:** a escolha é salva em `~/.local/state/quickshell/theme`. No `hyprland.conf`, em vez de iniciar o
+  `linux-wallpaperengine` direto, use `exec-once = ~/.config/quickshell/tools/wallpaper.sh start`: ele sobe o engine
+  com o tema salvo e o shell lê o mesmo arquivo. Monitores e opções do engine ficam em `themes/engine.conf`.
+- **Padrão:** `themeId` no `shell.qml` vale só enquanto não existe tema salvo (e `DEFAULT_ID` no `engine.conf` faz o
+  mesmo papel para o wallpaper). Para testar sem salvar nada: `QS_THEME=1845706469 qs`.
+- Id vazio, ou sem arquivo em `themes/`, usa cores e assets padrão. Editar o json com o shell aberto aplica na hora.
 
 ## Formato
 

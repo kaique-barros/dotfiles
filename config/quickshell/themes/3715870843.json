@@ -1,0 +1,23 @@
+{
+  "id": "3715870843",
+  "name": "荆棘1",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/3715870843.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#090908",
+    "cor2": "#991c19",
+    "cor3": "#dab1b0",
+    "accent": "#a23b39",
+    "danger": ""
+  },
+  "quantized": [
+    "#0b0b0a",
+    "#191411",
+    "#691513",
+    "#49352e",
+    "#991c19",
+    "#9a1c1a",
+    "#9a1c1a",
+    "#a23b39"
+  ]
+}

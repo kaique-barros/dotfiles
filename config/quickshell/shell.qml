@@ -3,6 +3,7 @@
 
 import "components/bar"
 import "components/theme"
+import "components/notifications"
 
 import Quickshell
 import QtQml
@@ -10,16 +11,18 @@ import QtQml
 ShellRoot {
   id: root
 
-  // Tema em uso: o id do wallpaper no Wallpaper Engine (ex.: "1845706469").
-  // Lê themes/<id>.json; "" ou um id sem arquivo = cores e assets padrão.
-  // Dá para trocar sem editar o arquivo: QS_THEME=1845706469 qs
-  readonly property string themeId: Quickshell.env("QS_THEME") || ""
+  // Tema padrão: o id do wallpaper no Wallpaper Engine (ex.: "1845706469").
+  // Só vale enquanto não houver um tema salvo (o seletor, Super+T, salva a escolha em
+  // ~/.local/state/quickshell/theme). Lê themes/<id>.json; "" ou um id sem arquivo = cores e assets padrão.
+  // Para testar sem salvar nada: QS_THEME=1845706469 qs
+  readonly property string themeId: "3828716991"
 
   Binding {
     target: Theme
-    property: "currentId"
+    property: "defaultId"
     value: root.themeId
   }
 
-  Bar {}
+  Bar { id: bar }
+  NotificationCenter { bar: bar }
 }

@@ -1,0 +1,332 @@
+diff --git a/config/hypr/hyprland.conf b/config/hypr/hyprland.conf
+index 6e24525..ab3396e 100644
+--- a/config/hypr/hyprland.conf
++++ b/config/hypr/hyprland.conf
+@@ -46,7 +46,8 @@ source = ~/.config/hypr/configs/windows.conf
+ 
+ exec-once = /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+ exec-once = qs
+-exec-once = swaync
++# as notificações agora são do Quickshell (só um programa pode ser o dono do serviço)
++# exec-once = swaync
+ exec-once = hyprpaper
+ exec-once = udiskie -2 &
+ exec-once = fcitx5 -d
+diff --git a/config/quickshell/components/bar/Bar.qml b/config/quickshell/components/bar/Bar.qml
+index 8b1e112..2520889 100644
+--- a/config/quickshell/components/bar/Bar.qml
++++ b/config/quickshell/components/bar/Bar.qml
+@@ -162,6 +162,24 @@ PanelWindow {
+   property real osdHeight: 210
+   property real osdPadding: 6
+ 
++  // ---------- notificações (canto superior direito) ----------
++  property real notifWidth: 360
++  property real notifHeight: 76                   // altura de toda notificação fechada (todas iguais)
++  property real notifMaxHeight: 420               // altura máxima quando expande
++  property real notifRadius: 16
++  property real notifGap: 10                      // espaço entre notificações
++  property real notifMargin: 16                   // distância da borda da tela
++  property real notifPadding: 12
++  property real notifIconSize: 40
++  property int notifTimeout: 5000                 // ms na tela (se o app não pedir outro tempo)
++  property int notifMaxToasts: 4                  // quantas aparecem ao mesmo tempo
++  property real notifHotSize: 24                  // canto que abre a lista ao encostar o mouse
++  property color notifBackgroundColor: cor1
++  property color notifTextColor: cor3
++  property color notifMutedColor: mix(cor3, cor1, 0.4)
++  property color notifBorderColor: mix(cor1, cor3, 0.15)
++  property color notifCloseColor: mix(cor1, cor3, 0.12)   // fundo do X
++
+   // ---------- seletor de tema (Super+T) ----------
+   property real themeCardWidth: 480               // largura do print do meio (o selecionado)
+   property real themeCardRatio: 16 / 9
+diff --git a/config/quickshell/components/notifications/NotificationCard.qml b/config/quickshell/components/notifications/NotificationCard.qml
+new file mode 100644
+index 0000000..f5117eb
+--- /dev/null
++++ b/config/quickshell/components/notifications/NotificationCard.qml
+@@ -0,0 +1,140 @@
++import QtQuick
++import Quickshell
++import Quickshell.Services.Notifications
++
++// Uma notificação. Fechada, todas têm a mesma altura (bar.notifHeight);
++// com o mouse em cima expande para mostrar o conteúdo inteiro e aparece o X para fechar.
++Item {
++  id: card
++
++  required property var notification     // Quickshell.Services.Notifications.Notification
++  property var bar
++  property bool autoHide: false          // toast: some sozinha depois de um tempo (continua na lista)
++  signal timedOut()
++
++  readonly property bool critical: notification.urgency === NotificationUrgency.Critical
++  readonly property bool expanded: hover.hovered
++  readonly property real pad: bar.notifPadding
++
++  readonly property string iconSource: {
++    const n = notification
++    if (n.image && n.image !== "") return n.image
++    if (n.appIcon && n.appIcon !== "")
++      return n.appIcon.startsWith("/") ? "file://" + n.appIcon : Quickshell.iconPath(n.appIcon, true)
++    return ""
++  }
++
++  readonly property real expandedHeight:
++    Math.min(bar.notifMaxHeight, Math.max(bar.notifHeight, textColumn.implicitHeight + 2 * pad))
++
++  width: parent ? parent.width : bar.notifWidth
++  height: expanded ? expandedHeight : bar.notifHeight
++  Behavior on height { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
++
++  HoverHandler { id: hover }
++
++  Timer {
++    interval: card.notification.expireTimeout > 0 ? card.notification.expireTimeout * 1000 : card.bar.notifTimeout
++    running: card.autoHide && !card.critical && !card.expanded
++    onTriggered: card.timedOut()
++  }
++
++  Rectangle {
++    anchors.fill: parent
++    radius: card.bar.notifRadius
++    color: card.bar.notifBackgroundColor
++    border.width: 1
++    border.color: card.critical ? card.bar.dangerColor : card.bar.notifBorderColor
++  }
++
++  // clicar na notificação aciona a ação padrão do app, se existir
++  MouseArea {
++    anchors.fill: parent
++    onClicked: {
++      const acts = card.notification.actions
++      for (let i = 0; i < acts.length; i++) {
++        if (acts[i].identifier === "default") { acts[i].invoke(); break }
++      }
++    }
++  }
++
++  Image {
++    id: icon
++    visible: card.iconSource !== ""
++    x: card.pad
++    y: card.pad
++    width: card.bar.notifIconSize
++    height: width
++    source: card.iconSource
++    sourceSize: Qt.size(width * 2, height * 2)
++    fillMode: Image.PreserveAspectFit
++    asynchronous: true
++  }
++
++  Column {
++    id: textColumn
++    x: card.pad + (icon.visible ? icon.width + card.pad : 0)
++    y: card.pad
++    width: card.width - x - card.pad - (card.expanded ? closeButton.width + 4 : 0)
++    spacing: 2
++
++    Text {
++      width: parent.width
++      visible: card.expanded && text !== ""
++      text: card.notification.appName
++      font.pixelSize: card.bar.fontSize - 1
++      color: card.bar.notifMutedColor
++      elide: Text.ElideRight
++    }
++
++    Text {
++      width: parent.width
++      text: card.notification.summary
++      font.pixelSize: card.bar.fontSize + 1
++      font.bold: true
++      color: card.bar.notifTextColor
++      wrapMode: Text.WordWrap
++      maximumLineCount: card.expanded ? 1000 : 1
++      elide: Text.ElideRight
++    }
++
++    Text {
++      width: parent.width
++      visible: text !== ""
++      text: card.notification.body
++      textFormat: Text.StyledText
++      font.pixelSize: card.bar.fontSize
++      color: card.bar.notifMutedColor
++      wrapMode: Text.WordWrap
++      maximumLineCount: card.expanded ? 1000 : 1
++      elide: Text.ElideRight
++    }
++  }
++
++  // X para fechar (só com o mouse em cima)
++  Rectangle {
++    id: closeButton
++    visible: card.expanded
++    width: 22
++    height: 22
++    radius: 11
++    x: card.width - width - 8
++    y: 8
++    color: closeArea.containsMouse ? card.bar.dangerColor : card.bar.notifCloseColor
++
++    Text {
++      anchors.centerIn: parent
++      text: "✕"
++      font.pixelSize: 11
++      color: closeArea.containsMouse ? card.bar.notifBackgroundColor : card.bar.notifTextColor
++    }
++
++    MouseArea {
++      id: closeArea
++      anchors.fill: parent
++      hoverEnabled: true
++      cursorShape: Qt.PointingHandCursor
++      onClicked: card.notification.dismiss()
++    }
++  }
++}
+diff --git a/config/quickshell/components/notifications/NotificationCenter.qml b/config/quickshell/components/notifications/NotificationCenter.qml
+new file mode 100644
+index 0000000..011aa60
+--- /dev/null
++++ b/config/quickshell/components/notifications/NotificationCenter.qml
+@@ -0,0 +1,117 @@
++import QtQuick
++import Quickshell
++import Quickshell.Wayland
++import Quickshell.Services.Notifications
++
++// Servidor de notificações do shell (substitui o swaync/mako/dunst: só um programa pode ser o dono do serviço).
++//
++//  - notificação nova aparece no canto superior direito e some sozinha depois de um tempo, mas continua guardada;
++//  - passar o mouse numa notificação expande ela e mostra o X;
++//  - sem nenhuma notificação na tela, encostar o mouse no canto superior direito lista todas as que não foram fechadas.
++// Tamanhos, tempos e cores ficam no bloco TEMA do Bar.qml (notif*).
++Scope {
++  id: root
++
++  required property var bar
++
++  // toasts em exibição (mais nova primeiro); as já escondidas continuam em server.trackedNotifications
++  property var toasts: []
++  readonly property var visibleToasts: toasts.filter(n => n).slice(0, bar.notifMaxToasts)
++  readonly property bool hasToasts: visibleToasts.length > 0
++  readonly property int total: server.trackedNotifications.values.length
++
++  property bool listOpen: false
++  readonly property bool showList: listOpen && !hasToasts && total > 0
++
++  function removeToast(n) { toasts = toasts.filter(x => x && x !== n) }
++
++  function updateList() {
++    if (hasToasts || total === 0) { listClose.stop(); listOpen = false; return }
++    if (hot.hovered || viewHover.hovered) { listClose.stop(); listOpen = true }
++    else listClose.restart()
++  }
++  onHasToastsChanged: updateList()
++  onTotalChanged: updateList()
++
++  Timer { id: listClose; interval: 400; onTriggered: root.listOpen = false }
++
++  NotificationServer {
++    id: server
++    keepOnReload: true
++    bodySupported: true
++    bodyMarkupSupported: true
++    actionsSupported: true
++    imageSupported: true
++    persistenceSupported: true
++
++    onNotification: (notification) => {
++      notification.tracked = true
++      notification.closed.connect(() => root.removeToast(notification))
++      root.toasts = [notification].concat(root.toasts.filter(x => x && x !== notification))
++      root.listOpen = false
++    }
++  }
++
++  PanelWindow {
++    id: win
++
++    anchors { top: true; right: true; bottom: true }
++    implicitWidth: root.bar.notifWidth + 2 * root.bar.notifMargin
++    color: "transparent"
++    exclusionMode: ExclusionMode.Ignore
++    WlrLayershell.layer: WlrLayer.Overlay
++    WlrLayershell.namespace: "quickshell-notifications"
++
++    // só as notificações e o cantinho recebem o mouse; o resto da janela é transparente para os cliques
++    mask: Region {
++      Region { item: viewport }
++      Region { item: hot }
++    }
++
++    // canto superior direito: encostar aqui abre a lista (só existe quando há o que listar)
++    Item {
++      id: hot
++      property bool hovered: hotHover.hovered
++      anchors.top: parent.top
++      anchors.right: parent.right
++      width: (root.total > 0 && !root.hasToasts) ? root.bar.notifHotSize : 0
++      height: width
++
++      HoverHandler { id: hotHover; onHoveredChanged: root.updateList() }
++    }
++
++    Flickable {
++      id: viewport
++      x: win.width - width - root.bar.notifMargin
++      y: root.bar.notifMargin
++      width: root.bar.notifWidth
++      height: Math.min(stack.height, win.height - 2 * root.bar.notifMargin)
++      contentWidth: width
++      contentHeight: stack.height
++      interactive: contentHeight > height
++      boundsBehavior: Flickable.StopAtBounds
++      clip: true
++
++      HoverHandler { id: viewHover; onHoveredChanged: root.updateList() }
++
++      Column {
++        id: stack
++        width: viewport.width
++        spacing: root.bar.notifGap
++
++        Repeater {
++          model: root.showList ? server.trackedNotifications : root.visibleToasts
++
++          delegate: NotificationCard {
++            required property var modelData
++            width: stack.width
++            bar: root.bar
++            notification: modelData
++            autoHide: !root.showList
++            onTimedOut: root.removeToast(modelData)
++          }
++        }
++      }
++    }
++  }
++}
+diff --git a/config/quickshell/shell.qml b/config/quickshell/shell.qml
+index 82937a2..bdc8d27 100644
+--- a/config/quickshell/shell.qml
++++ b/config/quickshell/shell.qml
+@@ -3,6 +3,7 @@
+ 
+ import "components/bar"
+ import "components/theme"
++import "components/notifications"
+ 
+ import Quickshell
+ import QtQml
+@@ -22,5 +23,6 @@ ShellRoot {
+     value: root.themeId
+   }
+ 
+-  Bar {}
++  Bar { id: bar }
++  NotificationCenter { bar: bar }
+ }

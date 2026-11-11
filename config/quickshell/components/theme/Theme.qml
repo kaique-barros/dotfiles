@@ -6,7 +6,9 @@ import Quickshell.Io
 
 // Tema atual, lido de themes/<id>.json (o id é o mesmo do Wallpaper Engine).
 //
-//   Theme.currentId            id do tema ("" = tudo padrão); definido no shell.qml
+//   Theme.currentId            id do tema em uso ("" = tudo padrão)
+//   Theme.select("1845706469") troca de tema: aplica na hora, salva e troca o wallpaper (tools/wallpaper.sh)
+//   Theme.defaultId            tema usado enquanto não houver um salvo; definido no shell.qml
 //   Theme.color("cor1", "#fff") cor do tema, ou o valor padrão quando o tema não define
 //   Theme.asset("battery.svg")  ícone/imagem do tema, ou o de assets/ quando o tema não tem
 //
@@ -23,9 +25,15 @@ import Quickshell.Io
 Singleton {
   id: root
 
-  property string currentId: ""
+  // Quem manda: o que foi escolhido (QS_THEME, o arquivo salvo ou o seletor) > defaultId do shell.qml
+  property string defaultId: ""
+  property string chosenId: Quickshell.env("QS_THEME") || ""
+  readonly property string currentId: chosenId !== "" ? chosenId : defaultId
 
   readonly property string themesDir: Quickshell.shellPath("themes")
+  readonly property string wallpaperScript: Quickshell.shellPath("tools/wallpaper.sh")
+  // o mesmo arquivo que o tools/wallpaper.sh grava, para o tema sobreviver ao reinício
+  readonly property string stateFile: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/quickshell/theme"
   readonly property string themeFile: currentId !== "" ? themesDir + "/" + currentId + ".json" : ""
 
   // ---------- dados do tema carregado ----------
@@ -65,6 +73,13 @@ Singleton {
     return typeof v === "string" && /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v.trim())
   }
 
+  // troca de tema: as cores mudam na hora; o wallpaper troca quando você para de passar (evita reiniciar o engine a cada tecla)
+  function select(id) {
+    if (!id || id === currentId) return
+    chosenId = id
+    wallpaperTimer.restart()
+  }
+
   function reset() {
     name = ""
     screenshot = ""
@@ -98,6 +113,23 @@ Singleton {
     assetFiles = []
     assetsDir = expand(data.assets)
     if (assetsDir !== "") lister.running = true
+  }
+
+  Timer {
+    id: wallpaperTimer
+    interval: 350
+    onTriggered: Quickshell.execDetached([root.wallpaperScript, "set", root.currentId])
+  }
+
+  // tema salvo da última vez (só vale se nada foi escolhido ainda)
+  FileView {
+    id: stateView
+    path: root.stateFile
+    printErrors: false
+    onLoaded: {
+      const id = text().trim()
+      if (id !== "" && root.chosenId === "") root.chosenId = id
+    }
   }
 
   FileView {

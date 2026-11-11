@@ -1,0 +1,23 @@
+{
+  "id": "2985094764",
+  "name": "Elysia | Honkai Impact 3rd",
+  "screenshot": "/home/kaiqbbrs/rice/config/quickshell/themes/screenshots/2985094764.png",
+  "assets": "",
+  "colors": {
+    "cor1": "#e8e4f5",
+    "cor2": "#4843c7",
+    "cor3": "#16163f",
+    "accent": "#6485e6",
+    "danger": ""
+  },
+  "quantized": [
+    "#31318d",
+    "#4843c7",
+    "#575bd2",
+    "#6485e6",
+    "#b17bba",
+    "#b579eb",
+    "#d3c0d5",
+    "#ded8f1"
+  ]
+}

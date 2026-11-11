@@ -5,9 +5,10 @@ import Quickshell.Services.Notifications
 
 // Servidor de notificações do shell (substitui o swaync/mako/dunst: só um programa pode ser o dono do serviço).
 //
-//  - notificação nova aparece no canto superior direito e some sozinha depois de um tempo, mas continua guardada;
-//  - passar o mouse numa notificação expande ela e mostra o X;
-//  - sem nenhuma notificação na tela, encostar o mouse no canto superior direito lista todas as que não foram fechadas.
+//  - notificação nova aparece no canto superior direito e some sozinha depois de um tempo, mas continua no histórico;
+//  - passar o mouse numa notificação expande ela e mostra o X; fechar um toast só o esconde (fica no histórico);
+//  - sem toasts na tela, encostar o mouse no extremo do canto superior direito abre o histórico;
+//    lá o X apaga a notificação de vez (e "Limpar tudo" apaga todas).
 // Tamanhos, tempos e cores ficam no bloco TEMA do Bar.qml (notif*).
 Scope {
   id: root
@@ -22,6 +23,11 @@ Scope {
 
   property bool listOpen: false
   readonly property bool showList: listOpen && !hasToasts && total > 0
+
+  function clearAll() {
+    const all = server.trackedNotifications.values.slice()
+    for (let i = 0; i < all.length; i++) all[i].dismiss()
+  }
 
   function removeToast(n) { toasts = toasts.filter(x => x && x !== n) }
 
@@ -68,7 +74,7 @@ Scope {
       Region { item: hot }
     }
 
-    // canto superior direito: encostar aqui abre a lista (só existe quando há o que listar)
+    // extremo do canto superior direito: encostar aqui abre o histórico (só existe quando há o que listar)
     Item {
       id: hot
       property bool hovered: hotHover.hovered
@@ -99,6 +105,31 @@ Scope {
         width: viewport.width
         spacing: root.bar.notifGap
 
+        // histórico: apagar tudo
+        Rectangle {
+          visible: root.showList
+          width: stack.width
+          height: visible ? 30 : 0
+          radius: root.bar.notifRadius
+          color: clearArea.containsMouse ? root.bar.dangerColor : root.bar.notifBackgroundColor
+          border.width: 1
+          border.color: root.bar.notifBorderColor
+
+          Text {
+            anchors.centerIn: parent
+            text: "Limpar tudo (" + root.total + ")"
+            font.pixelSize: root.bar.fontSize
+            color: clearArea.containsMouse ? root.bar.notifBackgroundColor : root.bar.notifMutedColor
+          }
+          MouseArea {
+            id: clearArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: root.clearAll()
+          }
+        }
+
         Repeater {
           model: root.showList ? server.trackedNotifications : root.visibleToasts
 
@@ -108,7 +139,9 @@ Scope {
             bar: root.bar
             notification: modelData
             autoHide: !root.showList
+            inHistory: root.showList
             onTimedOut: root.removeToast(modelData)
+            onHideRequested: root.removeToast(modelData)
           }
         }
       }

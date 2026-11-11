@@ -10,7 +10,9 @@ Item {
   required property var notification     // Quickshell.Services.Notifications.Notification
   property var bar
   property bool autoHide: false          // toast: some sozinha depois de um tempo (continua na lista)
+  property bool inHistory: false         // no histórico o X apaga de vez; no toast só esconde (continua no histórico)
   signal timedOut()
+  signal hideRequested()
 
   readonly property bool critical: notification.urgency === NotificationUrgency.Critical
   readonly property bool expanded: hover.hovered
@@ -111,7 +113,7 @@ Item {
     }
   }
 
-  // X para fechar (só com o mouse em cima)
+  // X (só com o mouse em cima): no toast esconde; no histórico apaga
   Rectangle {
     id: closeButton
     visible: card.expanded
@@ -134,7 +136,7 @@ Item {
       anchors.fill: parent
       hoverEnabled: true
       cursorShape: Qt.PointingHandCursor
-      onClicked: card.notification.dismiss()
+      onClicked: card.inHistory ? card.notification.dismiss() : card.hideRequested()
     }
   }
 }

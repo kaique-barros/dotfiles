@@ -183,7 +183,7 @@ PanelWindow {
   property real notifIconSize: 40
   property int notifTimeout: 5000                 // ms na tela (se o app não pedir outro tempo)
   property int notifMaxToasts: 4                  // quantas aparecem ao mesmo tempo
-  property real notifHotSize: 4                   // extremo do canto que abre o histórico ao encostar o mouse (px)
+  property real notifHotSize: 6                   // extremo do canto que abre o histórico ao encostar o mouse (px)
   property color notifBackgroundColor: cor1
   property color notifTextColor: cor3
   property color notifMutedColor: mix(cor3, cor1, 0.4)

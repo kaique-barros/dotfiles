@@ -64,7 +64,7 @@ Box {
   readonly property string detectedWm: {
     const d = Quickshell.env("XDG_CURRENT_DESKTOP") || Quickshell.env("XDG_SESSION_DESKTOP") || ""
     if (d !== "") return d
-    return Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ? "Hyprland" : ""
+    return Quickshell.env("NIRI_SOCKET") ? "niri" : ""
   }
 
   property string detectedDistro: ""

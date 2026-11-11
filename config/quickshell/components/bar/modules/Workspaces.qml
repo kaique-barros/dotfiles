@@ -1,5 +1,6 @@
 import QtQuick
-import Quickshell.Hyprland
+import Quickshell
+import Quickshell.Io
 
 import "../../theme"
 import "../models"
@@ -49,21 +50,50 @@ BarItemModel {
   inset: Math.max(0, (thickness - pillThickness) / 2)
   padding: Math.max(0, (pillThickness - activeBox) / 2)
 
-  readonly property int currentId:
-      Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : -1
+  // ---- niri: workspaces via `niri msg --json` (o Quickshell não tem módulo nativo) ----
+  property int currentId: -1
+  property var wsIds: []
 
-  readonly property var wsIds: {
-    const vs = Hyprland.workspaces.values
-    const ids = []
-    for (let i = 0; i < vs.length; i++) {
-      if (vs[i].id > 0)
-        ids.push(vs[i].id)
+  function refresh() { if (!wsReader.running) wsReader.running = true }
+
+  Process {
+    id: wsReader
+    command: ["niri", "msg", "--json", "workspaces"]
+    running: true
+    stdout: StdioCollector {
+      onStreamFinished: {
+        let list = []
+        try { list = JSON.parse(text) } catch (e) { return }
+        // só do monitor focado; mostra as que têm janela + a focada
+        const focused = list.find(w => w.is_focused)
+        const out = focused ? focused.output : null
+        const ids = []
+        let cur = -1
+        for (const w of list) {
+          if (out && w.output !== out) continue
+          if (w.is_focused) cur = w.idx
+          if (w.is_focused || w.active_window_id !== null) ids.push(w.idx)
+        }
+        ids.sort((x, y) => x - y)
+        root.currentId = cur
+        root.wsIds = ids
+      }
     }
-    if (currentId > 0 && ids.indexOf(currentId) < 0)
-      ids.push(currentId)
-    ids.sort((a, b) => a - b)
-    return ids
   }
+
+  // eventos do niri: qualquer evento de workspace/janela dispara uma releitura
+  Process {
+    id: events
+    command: ["niri", "msg", "--json", "event-stream"]
+    running: true
+    stdout: SplitParser {
+      onRead: line => {
+        if (line.indexOf("Workspace") >= 0 || line.indexOf("Window") >= 0) root.refresh()
+      }
+    }
+    onRunningChanged: if (!running) restart.start()
+  }
+  Timer { id: restart; interval: 2000; onTriggered: events.running = true }
 
   length: (vertical ? grid.implicitHeight : grid.implicitWidth)
           + 2 * (inset + padding) + 2 * endPadding
@@ -118,7 +148,7 @@ BarItemModel {
           width: parent.width + root.dotSpacing
           height: parent.height + root.dotSpacing
           cursorShape: Qt.PointingHandCursor
-          onClicked: Hyprland.dispatch("workspace " + cell.modelData)
+          onClicked: Quickshell.execDetached(["niri", "msg", "action", "focus-workspace", String(cell.modelData)])
         }
       }
     }

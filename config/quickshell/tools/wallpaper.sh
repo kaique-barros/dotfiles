@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Inicia o linux-wallpaperengine com o tema salvo e troca de wallpaper/tema.
 #
-#   wallpaper.sh start        inicia com o tema salvo (use no exec-once do hyprland.conf)
+#   wallpaper.sh start        inicia com o tema salvo (use no spawn-at-startup do config.kdl)
 #   wallpaper.sh set <id>     salva <id> como tema atual e troca o wallpaper
 #   wallpaper.sh get          mostra o id salvo
 #
@@ -17,7 +17,7 @@ STATE_FILE="$STATE_DIR/theme"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/quickshell-wallpaper.lock"
 
 LWE="linux-wallpaperengine"
-MONITORS=""        # vazio = todos os monitores do hyprctl
+MONITORS=""        # vazio = todos os monitores do niri
 GLOBAL_ARGS=""     # opções do engine antes dos wallpapers (ex.: --silent --fps 30)
 BG_ARGS=""         # opções de cada wallpaper (ex.: --scaling fill --clamp border)
 DEFAULT_ID=""      # usado enquanto não existir tema salvo
@@ -32,7 +32,7 @@ current_id() {
 }
 
 monitors() {
-  if [ -n "$MONITORS" ]; then echo $MONITORS; else hyprctl monitors -j 2>/dev/null | jq -r '.[].name'; fi
+  if [ -n "$MONITORS" ]; then echo $MONITORS; else niri msg --json outputs 2>/dev/null | jq -r 'keys[]'; fi
 }
 
 engine_pids() { pgrep -f '(^|/)linux-wallpaperengine( |$)' || true; }

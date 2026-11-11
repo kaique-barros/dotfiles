@@ -8,7 +8,7 @@ Um tema = um arquivo `themes/<id>.json`, onde `<id>` é o id do wallpaper no Wal
 - **Seletor (Super+T):** abre um popup embaixo da tela com os prints dos wallpapers. `h`/`l` (ou ← →, roda do mouse,
   clique) passam de um para o outro e já trocam o tema e o wallpaper; `Esc`, `Enter` ou `q` fecham, e o tema escolhido fica.
   O atalho é `bind = $mainMod, T, exec, qs ipc call theme toggle` (também existem `theme open` e `theme close`).
-- **Persistência:** a escolha é salva em `~/.local/state/quickshell/theme`. No `hyprland.conf`, em vez de iniciar o
+- **Persistência:** a escolha é salva em `~/.local/state/quickshell/theme`. No `config.kdl`, em vez de iniciar o
   `linux-wallpaperengine` direto, use `exec-once = ~/.config/quickshell/tools/wallpaper.sh start`: ele sobe o engine
   com o tema salvo e o shell lê o mesmo arquivo. Monitores e opções do engine ficam em `themes/engine.conf`.
 - **Padrão:** `themeId` no `shell.qml` vale só enquanto não existe tema salvo (e `DEFAULT_ID` no `engine.conf` faz o

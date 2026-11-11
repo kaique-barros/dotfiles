@@ -162,6 +162,24 @@ PanelWindow {
   property real osdHeight: 210
   property real osdPadding: 6
 
+  // ---------- notificações (canto superior direito) ----------
+  property real notifWidth: 360
+  property real notifHeight: 76                   // altura de toda notificação fechada (todas iguais)
+  property real notifMaxHeight: 420               // altura máxima quando expande
+  property real notifRadius: 16
+  property real notifGap: 10                      // espaço entre notificações
+  property real notifMargin: 16                   // distância da borda da tela
+  property real notifPadding: 12
+  property real notifIconSize: 40
+  property int notifTimeout: 5000                 // ms na tela (se o app não pedir outro tempo)
+  property int notifMaxToasts: 4                  // quantas aparecem ao mesmo tempo
+  property real notifHotSize: 24                  // canto que abre a lista ao encostar o mouse
+  property color notifBackgroundColor: cor1
+  property color notifTextColor: cor3
+  property color notifMutedColor: mix(cor3, cor1, 0.4)
+  property color notifBorderColor: mix(cor1, cor3, 0.15)
+  property color notifCloseColor: mix(cor1, cor3, 0.12)   // fundo do X
+
   // ---------- seletor de tema (Super+T) ----------
   property real themeCardWidth: 480               // largura do print do meio (o selecionado)
   property real themeCardRatio: 16 / 9

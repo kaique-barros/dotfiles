@@ -3,6 +3,7 @@
 
 import "components/bar"
 import "components/theme"
+import "components/notifications"
 
 import Quickshell
 import QtQml
@@ -22,5 +23,6 @@ ShellRoot {
     value: root.themeId
   }
 
-  Bar {}
+  Bar { id: bar }
+  NotificationCenter { bar: bar }
 }

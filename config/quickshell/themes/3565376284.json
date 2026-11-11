@@ -19,5 +19,9 @@
     "#edebed",
     "#ededeb",
     "#ededee"
-  ]
+  ],
+  "niri": {
+    "borderWidth": 2,
+    "cornerRadius": 20
+  }
 }

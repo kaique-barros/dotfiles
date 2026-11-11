@@ -36,8 +36,8 @@ layout {
     focus-ring { off; }
     border {
         width 2
-        active-gradient from="#408a71" to="#b0e4cc" angle=45
-        inactive-color "#285a48"
+        active-gradient from="#fefefe" to="#2a211c" angle=45
+        inactive-color "#2a211c"
     }
 }
 
@@ -56,6 +56,10 @@ environment {
     // GDK_BACKEND "wayland" fica de fora: quebra apps GTK via Xwayland; XDG_* é o niri que define
 }
 
+cursor {
+    xcursor-size 12
+}
+
 // Workspace nomeada para o Spotify (smart-close.sh)
 workspace "spotify"
 
@@ -65,6 +69,13 @@ spawn-at-startup "udiskie" "-2"
 spawn-at-startup "fcitx5" "-d"
 spawn-at-startup "sh" "-c" "~/.config/quickshell/tools/wallpaper.sh start"
 spawn-at-startup "sh" "-c" "until busctl --user list | grep -q org.kde.StatusNotifierWatcher; do sleep 0.5; done; exec snixembed"
+
+// ---- comportamento padrão de novas janelas ----
+window-rule {
+    open-maximized false
+    open-maximized-to-edges false
+    open-fullscreen false
+}
 
 window-rule {
     match app-id=r#"^local\.extractprogress$"#
@@ -87,6 +98,8 @@ window-rule {
     opacity 0.9
 }
 
+include optional=true "~/.local/state/quickshell/niri-theme.kdl"
+
 binds {
     // ---- apps ----
     Mod+Return { spawn "kitty"; }
@@ -97,9 +110,7 @@ binds {
     Mod+Space { spawn "fcitx5-remote" "-t"; }
     Mod+R { spawn "sh" "-c" "~/.config/quickshell/toggle_dock.sh"; }
     Mod+T { spawn "qs" "ipc" "call" "theme" "toggle"; }
-    // páginas da dock (antes F/G globais): Mod+] / Mod+[
-    Mod+BracketRight { spawn "qs" "ipc" "call" "dock" "next"; }
-    Mod+BracketLeft  { spawn "qs" "ipc" "call" "dock" "prev"; }
+     // páginas da dock
 
     // ---- janelas ----
     Mod+Q { spawn "sh" "-c" "~/.config/niri/smart-close.sh"; }
@@ -114,23 +125,17 @@ binds {
     Mod+Equal { set-column-width "+10%"; }
     Mod+Ctrl+R { switch-preset-column-width; }
 
-    // ---- foco (hjkl + setas) ----
+    // ---- foco (j/k + h/l alternativos + setas) ----
+    Mod+J     { focus-column-left; }
+    Mod+K     { focus-column-right; }
     Mod+H     { focus-column-left; }
     Mod+L     { focus-column-right; }
-    Mod+J     { focus-window-down; }
-    Mod+K     { focus-window-up; }
+
     Mod+Left  { focus-column-left; }
     Mod+Right { focus-column-right; }
     Mod+Down  { focus-window-down; }
     Mod+Up    { focus-window-up; }
 
-    // mover (Shift)
-    Mod+Shift+H     { move-column-left; }
-    Mod+Shift+L     { move-column-right; }
-    Mod+Shift+J     { move-window-down; }
-    Mod+Shift+K     { move-window-up; }
-    Mod+Shift+Left  { move-column-left; }
-    Mod+Shift+Right { move-column-right; }
     // puxar/expulsar da coluna (substitui o split do dwindle)
     Mod+Comma  { consume-window-into-column; }
     Mod+Period { expel-window-from-column; }
@@ -169,9 +174,9 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // ---- screenshots (hyprshot → nativo do niri; salvam em screenshot-path e copiam) ----
-    Print       { screenshot; }
-    Shift+Print { screenshot-screen; }
-    Alt+Print   { screenshot-window; }
+    Shift+Print       { screenshot; }
+    Print             { screenshot-screen; }
+    Alt+Print         { screenshot-window; }
 
     // ---- mídia ----
     XF86AudioRaiseVolume allow-when-locked=true { spawn "wpctl" "set-volume" "-l" "1" "@DEFAULT_AUDIO_SINK@" "5%+"; }

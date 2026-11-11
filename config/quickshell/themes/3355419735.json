@@ -19,5 +19,9 @@
     "#51527c",
     "#51527b",
     "#8887ab"
-  ]
+  ],
+  "niri": {
+    "borderWidth": 2,
+    "cornerRadius": 20
+  }
 }

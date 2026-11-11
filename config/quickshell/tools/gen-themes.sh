@@ -44,6 +44,7 @@ for arg in "$@"; do
 done
 
 mkdir -p "$SHOTS_DIR"
+python3 "$HERE/add-niri-settings.py" --themes "$THEMES_DIR" || exit 1
 
 list_ids() {
   if [ ${#IDS[@]} -gt 0 ]; then printf '%s\n' "${IDS[@]}"; return; fi

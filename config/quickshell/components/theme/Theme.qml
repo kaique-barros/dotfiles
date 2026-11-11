@@ -35,6 +35,8 @@ Singleton {
   // o mesmo arquivo que o tools/wallpaper.sh grava, para o tema sobreviver ao reinício
   readonly property string stateFile: (Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/quickshell/theme"
   readonly property string themeFile: currentId !== "" ? themesDir + "/" + currentId + ".json" : ""
+  readonly property string niriThemeScript:
+    Quickshell.shellPath("tools/theme-sync-niri.sh")
 
   // ---------- dados do tema carregado ----------
   property string name: ""
@@ -71,6 +73,13 @@ Singleton {
 
   function isColor(v) {
     return typeof v === "string" && /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(v.trim())
+  }
+
+  function syncNiriTheme() {
+    Quickshell.execDetached([
+        root.niriThemeScript,
+        root.currentId
+    ])
   }
 
   // troca de tema: as cores mudam na hora; o wallpaper troca quando você para de passar (evita reiniciar o engine a cada tecla)
@@ -139,11 +148,19 @@ Singleton {
     printErrors: false
     property bool loadedOnce: false
 
-    onLoaded: { loadedOnce = true; root.apply(text()) }
+    onLoaded: {
+      loadedOnce = true
+      root.apply(text())
+      root.syncNiriTheme()
+    }
+
     onLoadFailed: {
       loadedOnce = false
-      if (root.themeFile !== "") console.warn("Theme: não achei", root.themeFile, "- usando o padrão")
+      if (root.themeFile !== "")
+          console.warn("Theme: não achei", root.themeFile, "- usando o padrão")
+
       root.reset()
+      root.syncNiriTheme()
     }
     onFileChanged: reload()
   }

@@ -191,9 +191,8 @@ PanelWindow {
   property color notifCloseColor: mix(cor1, cor3, 0.12)   // fundo do X
   
   WlrLayershell.exclusionMode: ExclusionMode.Ignore
-  WlrLayershell.keyboardFocus: (dockContent.launcherActive || dockContent.homeKeysActive || themePicker.open)
-                               ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
+  WlrLayershell.keyboardFocus: (barDrawer.dockActive || themePicker.open)
+                             ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
   Item {
     id: globalShadowContainer
     anchors.fill: parent

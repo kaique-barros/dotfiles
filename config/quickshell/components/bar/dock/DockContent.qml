@@ -24,6 +24,22 @@ Item {
   visible: barDrawer.dockSize > 0.5
   clip: true
 
+  focus: barDrawer.dockActive
+
+  Keys.priority: Keys.BeforeItem
+  Keys.onPressed: (event) => {
+    if (!barDrawer.dockActive) return
+
+    if (event.key === Qt.Key_F) {
+      root.nextPage()
+      event.accepted = true
+    } else if (event.key === Qt.Key_G) {
+      root.prevPage()
+      event.accepted = true
+    }
+  }
+
+
   function nextPage() { pageView.currentPage = Math.min(pageView.totalPages - 1, pageView.currentPage + 1) }
   function prevPage() { pageView.currentPage = Math.max(0, pageView.currentPage - 1) }
 

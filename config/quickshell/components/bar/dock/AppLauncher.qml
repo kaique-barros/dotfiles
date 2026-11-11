@@ -15,6 +15,7 @@ Item {
   // ordenação: "usage" = mais usados primeiro (lançamentos feitos aqui; importe o cache antigo do rofi com tools/import-rofi-cache.sh)
   //            "alpha" = ordem alfabética
   property string sortMode: "usage"
+  property var terminalCommand: ["kitty"]
 
   property bool active: false              // ligado pela dock quando esta página está visível
   property bool closeOnLaunch: true        // fecha a dock depois de lançar
@@ -275,15 +276,21 @@ Item {
     page = 0
   }
 
-  function launch(i) {
+function launch(i) {
     if (i < 0 || i >= pageApps.length) return
     typed = []
     const e = pageApps[i]
     recordUse(e)
-    e.execute()
+    if (e.runInTerminal) {
+        Quickshell.execDetached(
+            terminalCommand.concat(e.command)
+        )
+    } else {
+        e.execute()
+    }
     launched()
     if (searching) endSearch()
-  }
+}
 
   function typeLetter(ch) {
     const next = typed.concat([ch])

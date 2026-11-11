@@ -139,13 +139,21 @@ def main():
         print("[theme] %s: nenhuma cor válida" % a.id, file=sys.stderr)
         return 1
 
+    niri = existing.get("niri", {})
+    if not isinstance(niri, dict):
+        niri = {}
+
     data = {
         "id": a.id,
         "name": existing.get("name") or read_title(a.workshop, a.id),
         "screenshot": a.shot,
-        "assets": existing.get("assets", ""),      # vazio = usar os assets padrão
+        "assets": existing.get("assets", ""),
         "colors": derive(raw),
         "quantized": [to_hex(c) for c in raw],
+        "niri": {
+            "borderWidth": niri.get("borderWidth", 2),
+            "cornerRadius": niri.get("cornerRadius", 7),
+        },
     }
     # mantém qualquer outra chave que você tenha adicionado ao tema
     for k, v in existing.items():

@@ -4,6 +4,7 @@
 import "components/bar"
 import "components/theme"
 import "components/notifications"
+import "components/overview"
 
 import Quickshell
 import QtQml
@@ -25,4 +26,5 @@ ShellRoot {
 
   Bar { id: bar }
   NotificationCenter { bar: bar }
+  OverviewBackdrop {}
 }

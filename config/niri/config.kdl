@@ -98,6 +98,16 @@ window-rule {
     opacity 0.9
 }
 
+// ---- fundo do overview (Mod+Tab): wallpaper desfocado do Quickshell (components/overview) ----
+overview {
+    backdrop-color "#00000000"
+    workspace-shadow { off; }
+}
+layer-rule {
+    match namespace="^quickshell-overview-backdrop$"
+    place-within-backdrop true
+}
+
 include optional=true "~/.local/state/quickshell/niri-theme.kdl"
 
 binds {

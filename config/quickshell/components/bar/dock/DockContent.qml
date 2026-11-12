@@ -6,6 +6,7 @@ import Quickshell.Wayland
 import Quickshell.Io
 
 import "../models"
+import "../../progress"
 import "."
 
 Item {
@@ -49,6 +50,9 @@ Item {
     function next(): void { root.nextPage() }
     function prev(): void { root.prevPage() }
   }
+
+  // o arquivo do Kanban do sistema de XP é o mesmo do calendário (muda em um lugar só)
+  Binding { target: Progress; property: "tasksFile"; value: calendarBox.tasksFile }
 
   readonly property bool launcherActive: barDrawer.dockActive && pageView.currentPage === 1
 
@@ -222,6 +226,15 @@ Item {
               colSpan: 3
               rowSpan: 2
               avatarFile: "icon.png"      // o arquivo que você colocar em assets/
+            }
+
+            XpBox {
+              col: 0; row: 4; colSpan: 3; rowSpan: 3
+              accentColor: canva.accentColor
+            }
+
+            XpStatsBox {
+              col: 3; row: 5; colSpan: 3; rowSpan: 2
             }
 
             CalendarBox {

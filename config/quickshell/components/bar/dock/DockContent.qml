@@ -85,7 +85,7 @@ Item {
         radius: canva.internalRadius                         // o mesmo raio da borda
         size: dockShadow.size
         strength: dockShadow.strength
-        color: "black"
+        color: canva.shadowColor
       }
     }
 

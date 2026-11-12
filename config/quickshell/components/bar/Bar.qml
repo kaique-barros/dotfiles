@@ -54,6 +54,10 @@ PanelWindow {
   property int animationTime: 250
   property int dockAnimationTime: animationTime
   property color frameColor: cor1
+  // sombra da moldura e da dock: preta, mas branca quando a cor da moldura é quase preta (senão não apareceria)
+  property real shadowDarkThreshold: 0.12                  // luminância (0 a 1) abaixo da qual a sombra vira branca
+  readonly property real frameLuma: 0.299 * frameColor.r + 0.587 * frameColor.g + 0.114 * frameColor.b
+  property color shadowColor: frameLuma < shadowDarkThreshold ? "white" : "black"
   property url splatterSource: Theme.asset("splatter.png")
   property real splatterOpacity: 0.2
 
@@ -277,7 +281,7 @@ PanelWindow {
       source: shapeSource
       anchors.fill: shapeSource
       shadowEnabled: true
-      shadowColor: 'black'
+      shadowColor: canva.shadowColor
       shadowBlur: 0.3
       shadowHorizontalOffset: 0
       shadowVerticalOffset: 0

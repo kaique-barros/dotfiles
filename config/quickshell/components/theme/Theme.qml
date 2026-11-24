@@ -37,6 +37,8 @@ Singleton {
   readonly property string themeFile: currentId !== "" ? themesDir + "/" + currentId + ".json" : ""
   readonly property string niriThemeScript:
     Quickshell.shellPath("tools/theme-sync-niri.sh")
+  readonly property string terminalThemeScript:
+    Quickshell.shellPath("tools/theme-sync-terminal.py")
 
   // ---------- dados do tema carregado ----------
   property string name: ""
@@ -78,6 +80,11 @@ Singleton {
   function syncNiriTheme() {
     Quickshell.execDetached([
         root.niriThemeScript,
+        root.currentId
+    ])
+    // paleta do terminal (kitty): o agnoster do oh-my-zsh usa as cores ANSI, então acompanha o tema
+    Quickshell.execDetached([
+        root.terminalThemeScript,
         root.currentId
     ])
   }

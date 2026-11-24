@@ -14,7 +14,7 @@ input {
     }
     mouse {
         // epic-mouse-v1 tinha sensibilidade -0.8 no Hyprland
-        accel-speed -0.8
+        accel-speed 0
     }
     focus-follows-mouse
 }
@@ -63,7 +63,6 @@ cursor {
 // Workspace nomeada para o Spotify (smart-close.sh)
 workspace "spotify"
 
-spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
 spawn-at-startup "qs"
 spawn-at-startup "udiskie" "-2"
 spawn-at-startup "fcitx5" "-d"
@@ -84,11 +83,6 @@ window-rule {
     default-window-height { fixed 300; }
 }
 window-rule {
-    // Elden Ring: tela cheia
-    match app-id=r#"^steam_app_1245620$"#
-    open-fullscreen true
-}
-window-rule {
     // as janelas do Quickshell (layer-shell) não são janelas; nada a fazer. Cantos arredondados:
     geometry-corner-radius 7
     clip-to-geometry true
@@ -96,6 +90,13 @@ window-rule {
 window-rule {
     match is-active=false
     opacity 0.9
+}
+window-rule {
+    match app-id="wallpaperengine"
+    match title="wallpaperengine"
+    open-floating true
+    default-column-width { fixed 1920; }
+    default-window-height { fixed 1080; }
 }
 
 // ---- fundo do overview (Mod+Tab): wallpaper desfocado do Quickshell (components/overview) ----
@@ -134,6 +135,8 @@ binds {
     Mod+Minus { set-column-width "-10%"; }
     Mod+Equal { set-column-width "+10%"; }
     Mod+Ctrl+R { switch-preset-column-width; }
+    Mod+Ctrl+L { move-column-right; }
+    Mod+Ctrl+H { move-column-left; }
 
     // ---- foco (j/k + h/l alternativos + setas) ----
     Mod+J     { focus-column-left; }

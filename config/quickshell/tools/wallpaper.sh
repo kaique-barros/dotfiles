@@ -17,9 +17,13 @@ STATE_FILE="$STATE_DIR/theme"
 LOCK="${XDG_RUNTIME_DIR:-/tmp}/quickshell-wallpaper.lock"
 
 LWE="linux-wallpaperengine"
+STEAM_DIR="${STEAM_DIR:-$HOME/hd/SteamLibrary}"
+ASSETS_DIR="${ASSETS_DIR:-$STEAM_DIR/steamapps/common/wallpaper_engine/assets}"
+WORKSHOP_DIR="${WORKSHOP_DIR:-$STEAM_DIR/steamapps/workshop/content/431960}"
+
 MONITORS=""        # vazio = todos os monitores do niri
-GLOBAL_ARGS=""     # opções do engine antes dos wallpapers (ex.: --silent --fps 30)
-BG_ARGS=""         # opções de cada wallpaper (ex.: --scaling fill --clamp border)
+GLOBAL_ARGS="--assets-dir $ASSETS_DIR"  # opções globais do engine (ex.: --silent --fps 30)
+BG_ARGS=""         # opções por monitor (ex.: --scaling fill --clamp border)
 DEFAULT_ID=""      # usado enquanto não existir tema salvo
 SWITCH_OVERLAP=1   # segundos com o engine novo e o antigo juntos (evita piscar a tela)
 # shellcheck disable=SC1090
@@ -38,13 +42,15 @@ monitors() {
 engine_pids() { pgrep -f '(^|/)linux-wallpaperengine( |$)' || true; }
 
 launch() {
-  local id="$1" m
+  local id="$1" m bg_target="$id"
+  [ -d "$WORKSHOP_DIR/$id" ] && bg_target="$WORKSHOP_DIR/$id"
+
   local -a args
   # shellcheck disable=SC2206
   args=($GLOBAL_ARGS)
   for m in $(monitors); do
     # shellcheck disable=SC2206
-    args+=(--screen-root "$m" --bg "$id" $BG_ARGS)
+    args+=(--screen-root "$m" --bg "$bg_target" $BG_ARGS)
   done
   setsid -f "$LWE" "${args[@]}" >/dev/null 2>&1 9>&-
 }

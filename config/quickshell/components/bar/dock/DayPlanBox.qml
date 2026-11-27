@@ -24,15 +24,15 @@ Box {
     const p = String(hhmm).split(":")
     return p.length >= 2 ? parseInt(p[0]) * 60 + parseInt(p[1]) : 0
   }
-  // faixa de horas mostrada: ao menos 8h–18h, ampliada para caber tudo
+  // faixa de horas mostrada: 8h até 23h (rola), ampliada para cima se algo começar antes das 8h
   readonly property int firstHour: {
     let m = 8
     for (const s of timed) m = Math.min(m, Math.floor(minutes(s.start) / 60))
     return Math.max(0, m)
   }
   readonly property int lastHour: {
-    let m = 18
-    for (const s of timed) m = Math.max(m, Math.ceil(minutes(s.end || s.start) / 60) + 1)
+    let m = 24
+    for (const s of timed) m = Math.max(m, Math.ceil(minutes(s.end || s.start) / 60))
     return Math.min(24, m)
   }
 

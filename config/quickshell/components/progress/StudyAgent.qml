@@ -94,6 +94,64 @@ Singleton {
   function pause(id)       { act(["task", "pause", String(id)]) }
   function plan(id, day)   { act(["task", "plan", String(id), day]) }
 
+  // ---------- comandos do widget de controle: avisam por notificação (recebido -> concluído/falhou) ----------
+  // opts: { env: {VAR: valor}, summarize: function(texto) -> string }
+  function notify(title, body) {
+    Quickshell.execDetached(["notify-send", "-a", "studyagent", title, body])
+  }
+  function job(label, args, opts) {
+    const o = opts || {}
+    notify(label, "comando recebido, em andamento…")
+    jobComp.createObject(root, {
+      command: [root.command].concat(args),
+      environment: o.env || ({}),
+      label: label,
+      summarize: o.summarize || null,
+      running: true
+    })
+  }
+  function finishJob(j, code, out, err) {
+    const lastLine = (t) => { const l = t.trim().split("\n").filter(x => x.trim() !== ""); return l.length ? l[l.length - 1] : "" }
+    if (code === 0) {
+      let body = j.summarize ? j.summarize(out) : lastLine(out)
+      notify(j.label + " ✓", (body || "concluído").slice(0, 240))
+    } else {
+      notify(j.label + " ✗", ("falhou: " + (lastLine(err) || lastLine(out) || ("código " + code))).slice(0, 240))
+    }
+    refresh()
+    j.destroy()
+  }
+  Component {
+    id: jobComp
+    Process {
+      id: j
+      property string label: ""
+      property var summarize: null
+      stdout: StdioCollector { id: jout }
+      stderr: StdioCollector { id: jerr }
+      onExited: (code) => root.finishJob(j, code, jout.text, jerr.text)
+    }
+  }
+
+  // "@27/11", "@+3", "@hoje", "@amanha", "@2026-12-04", "@27/11/2026" -> "aaaa-mm-dd" ("" se inválido)
+  function parseDue(s) {
+    const base = today !== "" ? parseDay(today) : new Date()
+    const fmt = (d) => dayKey(d)
+    let m
+    if (s === "hoje") return fmt(base)
+    if (s === "amanha" || s === "amanhã") return fmt(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 1))
+    if ((m = /^\+(\d{1,3})$/.exec(s))) return fmt(new Date(base.getFullYear(), base.getMonth(), base.getDate() + parseInt(m[1])))
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+    if ((m = /^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/.exec(s))) {
+      let y = m[3] ? parseInt(m[3]) : base.getFullYear()
+      if (y < 100) y += 2000
+      let d = new Date(y, parseInt(m[2]) - 1, parseInt(m[1]))
+      if (!m[3] && d < base) d = new Date(y + 1, parseInt(m[2]) - 1, parseInt(m[1]))   // sem ano e já passou: ano que vem
+      return fmt(d)
+    }
+    return ""
+  }
+
   function refresh() {
     if (snapProc.running) { pending = true; return }
     snapProc.running = true

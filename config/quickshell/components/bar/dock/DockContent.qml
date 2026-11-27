@@ -283,6 +283,11 @@ Item {
               accentColor: canva.accentColor
             }
 
+            ControlBox {
+              col: 0; row: 4; colSpan: 4; rowSpan: 2
+              accentColor: canva.accentColor
+            }
+
             MonthCalendar {
               id: monthCalendar
               col: 0; row: 2; colSpan: 3; rowSpan: 4

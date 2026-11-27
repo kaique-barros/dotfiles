@@ -51,8 +51,8 @@ Item {
     function prev(): void { root.prevPage() }
   }
 
-  // o arquivo do Kanban do sistema de XP é o mesmo do calendário (muda em um lugar só)
-  Binding { target: Progress; property: "tasksFile"; value: calendarBox.tasksFile }
+  // o StudyAgent só consulta o daemon com a dock aberta (e acompanha os eventos dele)
+  Binding { target: StudyAgent; property: "active"; value: root.barDrawer.dockActive }
 
   readonly property bool launcherActive: barDrawer.dockActive && pageView.currentPage === 1
 
@@ -207,43 +207,25 @@ Item {
             MediaBox {
               col: 0
               row: 0
-              colSpan: 3                   // largura: quantas colunas ocupa
-              rowSpan: 4                   // altura: quantas linhas ocupa
+              colSpan: 6                   // largura: quantas colunas ocupa
+              rowSpan: 6                   // altura: quantas linhas ocupa
             }
 
             RandomImageBox {
-              col: 3
-              row: 2
+              col: 0
+              row: 6
               colSpan: 3
-              rowSpan: 3
+              rowSpan: 5
               directories: ["~/Downloads/cassie_pack/"]
               active: barDrawer.dockActive
             }
 
             SessionBox {
               col: 3
-              row: 0
+              row: 6
               colSpan: 3
-              rowSpan: 2
+              rowSpan: 5
               avatarFile: "icon.png"      // o arquivo que você colocar em assets/
-            }
-
-            XpBox {
-              col: 0; row: 4; colSpan: 3; rowSpan: 3
-              accentColor: canva.accentColor
-            }
-
-            XpStatsBox {
-              col: 3; row: 5; colSpan: 3; rowSpan: 2
-            }
-
-            CalendarBox {
-              id: calendarBox
-              col: 0; row: 7; colSpan: 6; rowSpan: 4
-              directory: "~/Obsidian Vault/Calendar"
-              tasksFile: "~/Obsidian Vault/Tarefas.md"
-              active: barDrawer.dockActive
-              keysEnabled: barDrawer.dockActive && pageView.currentPage === 0
             }
 
           }
@@ -284,27 +266,38 @@ Item {
           clip: true
           visible: pageView.currentPage === 2 || slide.running
 
-          Column {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.topMargin: 14
-            spacing: 2
-          }
+          BoxGrid {
+            id: prodGrid
+            anchors.fill: parent
 
-          Rectangle {
-            anchors.centerIn: parent
-            width: parent.width - 40
-            height: 120
-            radius: 12
-            color: "#f8f9fc"
-            border.color: "#eaecf0"
-            border.width: 1
+            columns: 6
+            rows: 11
+            spacing: 10
+            showGrid: false
 
-            Text {
-              anchors.centerIn: parent
-              text: "Conteúdo da Página 3"
-              font.pixelSize: 11
-              color: "#98a2b3"
+            boxColor: canva.itemFillColor
+            boxRadius: 16
+
+            ProgressCard {
+              col: 0; row: 0; colSpan: 6; rowSpan: 2
+              accentColor: canva.accentColor
+            }
+
+            MonthCalendar {
+              id: monthCalendar
+              col: 0; row: 2; colSpan: 3; rowSpan: 4
+              accentColor: canva.accentColor
+            }
+
+            DayPlanBox {
+              col: 3; row: 2; colSpan: 3; rowSpan: 4
+              day: monthCalendar.selectedDay
+              accentColor: canva.accentColor
+            }
+
+            TaskListBox {
+              col: 0; row: 6; colSpan: 6; rowSpan: 5
+              accentColor: canva.accentColor
             }
           }
         }
